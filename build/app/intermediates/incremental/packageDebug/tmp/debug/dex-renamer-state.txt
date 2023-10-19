@@ -1,0 +1,4 @@
+#Wed Oct 11 10:05:39 CEST 2023
+base.0=C\:\\Users\\Oscar\\Documents\\EPHEC\\bac_3\\integration23\\flutter_application_1\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
