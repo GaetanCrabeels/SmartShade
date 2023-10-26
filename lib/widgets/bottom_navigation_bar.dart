@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
-import 'shutter_list.dart';
-import 'parameters.dart';
+import '../screens/home_page.dart';
+import '../screens/shutter_list.dart';
+import '../screens/parameters.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
   const BottomNavigationBarWidget({Key? key}) : super(key: key);
