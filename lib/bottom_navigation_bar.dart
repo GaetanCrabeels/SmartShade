@@ -15,7 +15,13 @@ class BottomNavigationBarWidget extends StatefulWidget {
 class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   int _selectedIndex = 0;
 
-  static final List<Widget> _widgetOptions = <Widget>[];
+  static final List<Widget> _widgetOptions = <Widget>[
+    //Liste des pages
+    const HomePage(),
+    const ShutterList(),
+    const Text('Index 2: Utilisateur'),
+    const Parameters(),
+  ];
 
 //Selection de la page
   void _onItemTapped(int index) {
