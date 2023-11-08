@@ -1,16 +1,42 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class UserPage extends StatefulWidget {
   final String user_name;
-  const UserPage({Key? key, required this.user_name}) : super(key: key);
+  const UserPage({super.key, required this.user_name});
 
   @override
+  // ignore: library_private_types_in_public_api
   _UserPageState createState() => _UserPageState();
 }
 
 class _UserPageState extends State<UserPage> {
   int _degreeDiff = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    CollectionReference houses =
+        FirebaseFirestore.instance.collection('houses');
+    String houseId = 'house_id_1';
+
+    houses.doc(houseId).get().then((DocumentSnapshot documentSnapshot) {
+      if (documentSnapshot.exists) {
+        if (kDebugMode) {
+          print('Document data: ${documentSnapshot.data()}');
+        }
+        setState(() {
+          _degreeDiff = documentSnapshot['shutter_temperature_delta'];
+        });
+      } else {
+        if (kDebugMode) {
+          print('Document does not exist on the database');
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +45,7 @@ class _UserPageState extends State<UserPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Page - ${widget.user_name}'),
+        title: const Text('User Page'),
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: users
