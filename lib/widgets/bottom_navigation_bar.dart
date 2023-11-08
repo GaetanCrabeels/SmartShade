@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import '../screens/home_page.dart';
 import '../screens/shutter_list.dart';
 import '../screens/parameters.dart';
+import '../screens/user_page.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
-  const BottomNavigationBarWidget({Key? key}) : super(key: key);
+  const BottomNavigationBarWidget({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -19,7 +20,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     //Liste des pages
     const HomePage(),
     const ShutterList(),
-    const Text('Index 2: Utilisateur'),
+    const UserPage(
+      user_name: '',
+    ),
     const Parameters(),
   ];
 
@@ -32,7 +35,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       } else if (_selectedIndex == 1) {
         _widgetOptions[1] = const ShutterList();
       } else if (_selectedIndex == 2) {
-        _widgetOptions[2] = const Text('Index 2: Utilisateur');
+        _widgetOptions[2] = const UserPage(
+          user_name: 'user_id_1',
+        );
       } else if (_selectedIndex == 3) {
         _widgetOptions[3] = const Parameters();
       }
