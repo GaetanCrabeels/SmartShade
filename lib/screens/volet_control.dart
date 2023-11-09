@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sensors/sensors.dart';
+import 'package:light/light.dart';
 
 class VoletControlPage extends StatefulWidget {
   @override
@@ -18,13 +18,17 @@ class _VoletControlPageState extends State<VoletControlPage> {
   @override
   void initState() {
     super.initState();
-    // Ajouter un écouteur pour le capteur de luminosité
-    gyroscopeEvents.listen((GyroscopeEvent event) {
-      // Utiliser event.x, event.y, event.z pour obtenir les valeurs du capteur
-      double luminosite = event.y;
+
+    // Créer une instance du capteur de lumière
+    Light light = Light();
+    
+    // Ajouter un écouteur pour le capteur de lumière
+    light.lightSensorEvents.listen((LightEvent event) {
+      // Utiliser event.light pour obtenir la luminosité en lux
+      double luminosite = event.light;
 
       // Simuler une condition où les volets se ferment automatiquement si la luminosité est élevée
-      if (luminosite > 5.0) {
+      if (luminosite > 100.0) {
         voletsFermes = true;
       } else {
         voletsFermes = false;
@@ -33,6 +37,9 @@ class _VoletControlPageState extends State<VoletControlPage> {
       // Mettre à jour l'interface utilisateur
       setState(() {});
     });
+
+    // Commencer l'écoute du capteur de lumière
+    light.startSensing();
   }
 
   @override
@@ -58,4 +65,12 @@ class _VoletControlPageState extends State<VoletControlPage> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    // Arrêter l'écoute du capteur de lumière lorsque la page est fermée
+    Light().stopSensing();
+    super.dispose();
+  }
 }
+
