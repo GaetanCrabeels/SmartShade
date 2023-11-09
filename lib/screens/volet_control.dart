@@ -8,38 +8,41 @@ class VoletControlPage extends StatefulWidget {
 
 class _VoletControlPageState extends State<VoletControlPage> {
   bool voletsFermes = false;
+  Light? _light;
+  StreamSubscription<int>? _subscription;
 
-  void basculerVolets() {
-    setState(() {
-      voletsFermes = !voletsFermes;
-    });
+  void onData(int luxValue) {
+    // Utiliser luxValue pour obtenir la luminosité en lux
+    double luminosite = luxValue.toDouble();
+
+    // Simuler une condition où les volets se ferment automatiquement si la luminosité est élevée
+    if (luminosite > 100.0) {
+      voletsFermes = true;
+    } else {
+      voletsFermes = false;
+    }
+
+    // Mettre à jour l'interface utilisateur
+    setState(() {});
+  }
+
+  void startListening() {
+    _light = Light();
+    try {
+      _subscription = _light?.lightSensorStream.listen(onData);
+    } on LightException catch (exception) {
+      print(exception);
+    }
+  }
+
+  void stopListening() {
+    _subscription?.cancel();
   }
 
   @override
   void initState() {
     super.initState();
-
-    // Créer une instance du capteur de lumière
-    Light light = Light();
-    
-    // Ajouter un écouteur pour le capteur de lumière
-    light.lightSensorEvents.listen((LightEvent event) {
-      // Utiliser event.light pour obtenir la luminosité en lux
-      double luminosite = event.light;
-
-      // Simuler une condition où les volets se ferment automatiquement si la luminosité est élevée
-      if (luminosite > 100.0) {
-        voletsFermes = true;
-      } else {
-        voletsFermes = false;
-      }
-
-      // Mettre à jour l'interface utilisateur
-      setState(() {});
-    });
-
-    // Commencer l'écoute du capteur de lumière
-    light.startSensing();
+    startListening();
   }
 
   @override
@@ -58,7 +61,7 @@ class _VoletControlPageState extends State<VoletControlPage> {
           ),
           SizedBox(height: 20),
           ElevatedButton(
-            onPressed: basculerVolets,
+            onPressed: () {},
             child: Text(voletsFermes ? 'Ouvrir les volets' : 'Fermer les volets'),
           ),
         ],
@@ -68,9 +71,9 @@ class _VoletControlPageState extends State<VoletControlPage> {
 
   @override
   void dispose() {
-    // Arrêter l'écoute du capteur de lumière lorsque la page est fermée
-    Light().stopSensing();
+    stopListening();
     super.dispose();
   }
 }
+
 
