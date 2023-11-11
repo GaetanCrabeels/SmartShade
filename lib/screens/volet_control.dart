@@ -58,7 +58,7 @@ class _VoletControlPageState extends State<VoletControlPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Contrôle des Volets'),
+        title: const Text('Gestion des Capteurs Lumineux'),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
