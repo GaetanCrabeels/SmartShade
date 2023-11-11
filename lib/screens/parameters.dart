@@ -36,7 +36,7 @@ class _ParametersState extends State<Parameters> {
               // Accéder à la page VoletControlPage (utilisation de VoletApp ici)
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => VoletApp()),
+                MaterialPageRoute(builder: (context) => VoletControlPage()),
               );
             },
           ),
