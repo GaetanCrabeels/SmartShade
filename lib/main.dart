@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'widgets/bottom_navigation_bar.dart  '; // Importez la barre de navigation inférieure
+import 'widgets/bottom_navigation_bar.dart'; // Importez la barre de navigation inférieure
 
 void main() {
   runApp(const MyApp());
