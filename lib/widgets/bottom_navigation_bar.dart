@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../screens/home_page.dart';
 import '../screens/shutter_list.dart';
 import '../screens/parameters.dart';
+
 import '../screens/user_page.dart';
+import '../screens/graphics.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
   const BottomNavigationBarWidget({super.key});
@@ -24,6 +26,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       user_name: '',
     ),
     const Parameters(),
+    const Graphics(),
   ];
 
 //Selection de la page
@@ -40,6 +43,8 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
         );
       } else if (_selectedIndex == 3) {
         _widgetOptions[3] = const Parameters();
+      } else if (_selectedIndex == 4) {
+        _widgetOptions[4] = const Graphics();
       }
     });
   }
@@ -72,6 +77,11 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
             icon: Icon(Icons.settings),
             label: 'Parametres',
             backgroundColor: Colors.pink,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.auto_graph_rounded),
+            label: 'Graphique',
+            backgroundColor: Colors.red,
           ),
         ],
         currentIndex: _selectedIndex,
