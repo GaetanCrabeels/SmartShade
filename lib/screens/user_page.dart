@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class UserPage extends StatefulWidget {
+  // ignore: non_constant_identifier_names
   final String user_name;
   const UserPage({super.key, required this.user_name});
 
@@ -67,13 +68,13 @@ class _UserPageState extends State<UserPage> {
           }
 
           // Access the user's data and display it
-          Map<String, dynamic> userData =
-              snapshot.data!.data() as Map<String, dynamic>;
-          String userName = userData['user_name'];
+          //Map<String, dynamic> userData =
+          //  snapshot.data!.data() as Map<String, dynamic>;
+          //String userName = userData['user_name'];
 
           return Column(
             children: [
-              Text('User Name: $userName'), // Display the user's name
+              //Text('User Name: $userName'), // Display the user's name
               Container(
                 padding: const EdgeInsets.all(16.0),
                 alignment: Alignment.center,
