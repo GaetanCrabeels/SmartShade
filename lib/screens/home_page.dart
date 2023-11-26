@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,6 +18,14 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _setShutterState(String shutterId, bool isOpen) {
+    shutters.doc(shutterId).update({'shutter_open': isOpen});
+  }
+
+  CollectionReference shutters =
+      FirebaseFirestore.instance.collection('shutters');
+  String shutterId = 'shutter_id_1';
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -32,6 +41,7 @@ class _HomePageState extends State<HomePage> {
                 ElevatedButton(
                   onPressed: () {
                     _toggleLoading();
+                    _setShutterState(shutterId, true);
                     Future.delayed(const Duration(seconds: 5), () {
                       _toggleLoading();
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -55,6 +65,7 @@ class _HomePageState extends State<HomePage> {
                 ElevatedButton(
                   onPressed: () {
                     _toggleLoading();
+                    _setShutterState(shutterId, false);
                     Future.delayed(const Duration(seconds: 5), () {
                       _toggleLoading();
                       ScaffoldMessenger.of(context).showSnackBar(

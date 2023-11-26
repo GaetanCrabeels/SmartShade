@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 class UserPage extends StatefulWidget {
   // ignore: non_constant_identifier_names
   final String user_name;
+  // ignore: non_constant_identifier_names
   const UserPage({super.key, required this.user_name});
 
   @override
