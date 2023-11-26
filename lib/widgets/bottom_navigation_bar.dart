@@ -21,7 +21,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   static final List<Widget> _widgetOptions = <Widget>[
     //Liste des pages
     const HomePage(),
-    const ShutterList(),
+    ShutterList(
+      houseId: 'house_id_1',
+    ),
     const UserPage(
       user_name: '',
     ),
@@ -36,7 +38,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       if (_selectedIndex == 0) {
         _widgetOptions[0] = const HomePage();
       } else if (_selectedIndex == 1) {
-        _widgetOptions[1] = const ShutterList();
+        _widgetOptions[1] = ShutterList(
+          houseId: 'house_id_1',
+        );
       } else if (_selectedIndex == 2) {
         _widgetOptions[2] = const UserPage(
           user_name: 'user_id_1',

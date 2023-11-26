@@ -18,10 +18,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  //Shutter state update function (open/close) in the database
   void _setShutterState(String shutterId, bool isOpen) {
     shutters.doc(shutterId).update({'shutter_open': isOpen});
   }
 
+  // function to get the shutter id from the database
   CollectionReference shutters =
       FirebaseFirestore.instance.collection('shutters');
   String shutterId = 'shutter_id_1';
