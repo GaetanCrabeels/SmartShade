@@ -18,8 +18,17 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   static final List<Widget> _widgetOptions = <Widget>[
     //Liste des pages
     const HomePage(),
+<<<<<<< Updated upstream
     const ShutterList(),
     const Text('Index 2: Utilisateur'),
+=======
+    const ShutterList(
+      houseId: 'house_id_1',
+    ),
+    const UserPage(
+      user_name: '',
+    ),
+>>>>>>> Stashed changes
     const Parameters(),
   ];
 
@@ -30,7 +39,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       if (_selectedIndex == 0) {
         _widgetOptions[0] = const HomePage();
       } else if (_selectedIndex == 1) {
-        _widgetOptions[1] = const ShutterList();
+        _widgetOptions[1] = const ShutterList(
+          houseId: 'house_id_1',
+        );
       } else if (_selectedIndex == 2) {
         _widgetOptions[2] = const Text('Index 2: Utilisateur');
       } else if (_selectedIndex == 3) {
