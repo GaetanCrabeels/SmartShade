@@ -5,15 +5,12 @@ class ShutterListPage extends StatelessWidget {
   const ShutterListPage({super.key});
 
   @override
-<<<<<<< Updated upstream
   // ignore: library_private_types_in_public_api
   _ShutterListState createState() => _ShutterListState();
 }
 
 class _ShutterListState extends State<ShutterList> {
   @override
-=======
->>>>>>> Stashed changes
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -69,7 +66,6 @@ class ShutterList extends StatelessWidget {
           );
         },
       ),
-<<<<<<< Updated upstream
       body: ListView.builder(
         itemCount: 20,
         itemBuilder: (BuildContext context, int index) {
@@ -85,8 +81,6 @@ class ShutterList extends StatelessWidget {
         icon: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-=======
->>>>>>> Stashed changes
     );
   }
 }

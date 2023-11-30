@@ -18,17 +18,13 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   static final List<Widget> _widgetOptions = <Widget>[
     //Liste des pages
     const HomePage(),
-<<<<<<< Updated upstream
-    const ShutterList(),
     const Text('Index 2: Utilisateur'),
-=======
     const ShutterList(
       houseId: 'house_id_1',
     ),
     const UserPage(
       user_name: '',
     ),
->>>>>>> Stashed changes
     const Parameters(),
   ];
 
