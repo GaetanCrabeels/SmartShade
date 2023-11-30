@@ -75,6 +75,7 @@ class _UserPageState extends State<UserPage> {
 
           return Column(
             children: [
+              const Text('Mode d\'utilisation des volets: '),
               //Text('User Name: $userName'), // Display the user's name
               Container(
                 padding: const EdgeInsets.all(16.0),
