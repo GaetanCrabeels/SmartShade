@@ -27,7 +27,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     const UserPage(
       user_name: '',
     ),
-    const Parameters(),
+    const UserProfilePage(),
     const Graphics(),
   ];
 
@@ -46,7 +46,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
           user_name: 'user_id_1',
         );
       } else if (_selectedIndex == 3) {
-        _widgetOptions[3] = const Parameters();
+        _widgetOptions[3] = const UserProfilePage();
       } else if (_selectedIndex == 4) {
         _widgetOptions[4] = const Graphics();
       }

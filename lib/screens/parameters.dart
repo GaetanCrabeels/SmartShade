@@ -1,50 +1,106 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Parameters extends StatefulWidget {
-  const Parameters({super.key});
+
+class UserProfilePage extends StatefulWidget {
+  const UserProfilePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _ParametersState createState() => _ParametersState();
+  _UserProfilePageState createState() => _UserProfilePageState();
 }
 
-class _ParametersState extends State<Parameters> {
-  bool _isDarkModeEnabled = false;
-  double _fontSize = 16.0;
-
+class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Parameters'),
+        title: const Text('Profil Utilisateur'),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SwitchListTile(
-            title: const Text('Dark mode'),
-            value: _isDarkModeEnabled,
-            onChanged: (value) {
-              setState(() {
-                _isDarkModeEnabled = value;
-              });
-            },
-          ),
-          const SizedBox(height: 16.0),
-          const Text('Font size'),
-          Slider(
-            value: _fontSize,
-            min: 12.0,
-            max: 24.0,
-            divisions: 6,
-            onChanged: (value) {
-              setState(() {
-                _fontSize = value;
-              });
-            },
-          ),
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text('Page de profil de l\'utilisateur'),
+            FutureBuilder<User?>(
+              future: FirebaseAuth.instance.authStateChanges().first,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return const Text('Erreur lors de la récupération de l\'utilisateur');
+                } else if (snapshot.hasData) {
+                  final User user = snapshot.data!;
+                  return Column(
+                    children: [
+                      Text('UID de l\'utilisateur : ${user.uid}'),
+                      ElevatedButton(
+                        onPressed: () {
+                          _showDeleteUserDialog(context);
+                        },
+                        child: Text('Supprimer le compte'),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const Text('Utilisateur non connecté');
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void _showDeleteUserDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmation'),
+          content: Text('Êtes-vous sûr de vouloir supprimer votre compte utilisateur ?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Ferme la boîte de dialogue
+              },
+              child: Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _deleteCurrentUser(context);
+              },
+              child: Text('Supprimer'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteCurrentUser(BuildContext context) async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      try {
+        // Déconnectez l'utilisateur
+        await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).delete();
+
+        await FirebaseAuth.instance.signOut();
+
+        // Redirigez l'utilisateur vers l'écran de connexion
+        Navigator.pushReplacementNamed(context, '/login');
+
+      } catch (e) {
+        print('Erreur lors de la déconnexion de l\'utilisateur : $e');
+        // Gérer l'erreur, par exemple, afficher un message à l'utilisateur
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de la déconnexion de l\'utilisateur'),
+          ),
+        );
+      }
+    }
   }
 }
