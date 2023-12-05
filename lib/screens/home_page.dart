@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../widgets/bottom_navigation_bar.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -46,14 +48,20 @@ class _HomePageState extends State<HomePage> {
             });
           }
         } else {
-          print('Results key not found in the response');
+          if (kDebugMode) {
+            print('Results key not found in the response');
+          }
         }
       } else {
-        print('Failed to fetch temperature data: ${response.statusCode}');
+        if (kDebugMode) {
+          print('Failed to fetch temperature data: ${response.statusCode}');
+        }
         // Handle error if needed
       }
     } catch (error) {
-      print('Error fetching temperature data: $error');
+      if (kDebugMode) {
+        print('Error fetching temperature data: $error');
+      }
       // Handle error if needed
     }
   }
