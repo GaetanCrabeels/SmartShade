@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 import 'package:flutter_application_1/screens/LoginPage.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -56,5 +55,3 @@ class AuthenticationWrapper extends StatelessWidget {
     }
   }
 }
-
-
