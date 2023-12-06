@@ -1,16 +1,14 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../widgets/bottom_navigation_bar.dart';
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
@@ -18,6 +16,9 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = false;
   String? _houseTemp;
   String? _outsideTemp;
+
+  late String _userId;
+  late String _houseId;
   late String apiEndpoint =
       'https://agromet.be/fr/agromet/api/v3/get_pameseb_hourly/tsa/18/2023-11-26/2023-11-26/';
 
@@ -82,22 +83,36 @@ class _HomePageState extends State<HomePage> {
 
     _fetchTemperature();
 
-    CollectionReference houses =
-        FirebaseFirestore.instance.collection('houses');
-    String houseId = 'house_id_1';
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _userId = user.uid;
+    }
 
-    houses.doc(houseId).get().then((DocumentSnapshot documentSnapshot) {
-      if (documentSnapshot.exists) {
-        if (kDebugMode) {
-          print('Document data: ${documentSnapshot.data()}');
-        }
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(_userId)
+        .get()
+        .then((DocumentSnapshot userSnapshot) {
+      if (userSnapshot.exists) {
         setState(() {
-          _houseTemp = documentSnapshot['house_temperature']?.toString();
+          _houseId = userSnapshot['houseId'];
+
+          FirebaseFirestore.instance
+              .collection('houses')
+              .doc(_houseId)
+              .get()
+              .then((DocumentSnapshot houseSnapshot) {
+            if (houseSnapshot.exists) {
+              setState(() {
+                _houseTemp = houseSnapshot['house_temperature']?.toString();
+              });
+            } else {
+              if (kDebugMode) {
+                print('Document does not exist on the database');
+              }
+            }
+          });
         });
-      } else {
-        if (kDebugMode) {
-          print('Document does not exist on the database');
-        }
       }
     });
   }

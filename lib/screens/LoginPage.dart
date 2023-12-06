@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 import 'sign_up.dart';
-import 'home_page.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key}); // Remove the const keyword here
@@ -12,11 +11,13 @@ class LoginPage extends StatelessWidget {
 
   Future<void> _signInWithEmailAndPassword(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
       // La connexion a réussi, vous pouvez naviguer vers la page suivante (par exemple, HomePage)
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const BottomNavigationBarWidget()),
+        MaterialPageRoute(
+            builder: (context) => const BottomNavigationBarWidget()),
       );
     } catch (e) {
       // La connexion a échoué, vous pouvez afficher un message d'erreur ou effectuer d'autres actions

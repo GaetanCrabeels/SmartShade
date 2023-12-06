@@ -3,10 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/widgets/reusable.dart';
-import 'package:flutter_application_1/screens/home_page.dart';
 import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
-
-
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -19,6 +16,8 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController _passwordTextController = TextEditingController();
   final TextEditingController _emailTextController = TextEditingController();
   final TextEditingController _userNameTextController = TextEditingController();
+
+  String? _houseId;
 
   @override
   Widget build(BuildContext context) {
@@ -37,23 +36,25 @@ class _SignUpState extends State<SignUp> {
             const SizedBox(
               height: 20,
             ),
-            reusableTextField(
-                "Enter Username", Icons.person_outline, false, _userNameTextController, context),
+            reusableTextField("Enter Username", Icons.person_outline, false,
+                _userNameTextController, context),
             const SizedBox(
               height: 20,
             ),
-            reusableTextField("Enter Email ID", Icons.email_outlined, false, _emailTextController, context),
+            reusableTextField("Enter Email ID", Icons.email_outlined, false,
+                _emailTextController, context),
             const SizedBox(
               height: 20,
             ),
-            reusableTextField("Enter Password", Icons.lock_outline, true, _passwordTextController, context),
+            reusableTextField("Enter Password", Icons.lock_outline, true,
+                _passwordTextController, context),
             const SizedBox(
               height: 20,
             ),
             signInsignUpButton(context, false, () async {
               try {
-                UserCredential userCredential = await FirebaseAuth.instance
-                    .createUserWithEmailAndPassword(
+                UserCredential userCredential =
+                    await FirebaseAuth.instance.createUserWithEmailAndPassword(
                   email: _emailTextController.text,
                   password: _passwordTextController.text,
                 );
@@ -61,11 +62,22 @@ class _SignUpState extends State<SignUp> {
                 final db = FirebaseFirestore.instance;
                 final localContext = context; // Capturer le contexte localement
 
+                DocumentReference houseRef = await db.collection("houses").add({
+                  'house_name': 'My House',
+                  'house_temperature': 20,
+                  'shutter_temperature_delta': 2,
+                });
+
+                setState(() {
+                  _houseId = houseRef.id;
+                });
+
                 db.collection("users").doc(userCredential.user?.uid).set({
                   'fullName': _userNameTextController.text,
                   'email': _emailTextController.text,
                   'accountCreated': Timestamp.now(),
-                  'Password':_passwordTextController.text,
+                  'Password': _passwordTextController.text,
+                  'houseId': _houseId,
                 }).onError((e, _) {
                   if (kDebugMode) {
                     print("Error writing document: $e");
@@ -83,10 +95,9 @@ class _SignUpState extends State<SignUp> {
                 }
 
                 Navigator.of(localContext).pushReplacement<void, dynamic>(
-                  MaterialPageRoute(builder: (context) => const BottomNavigationBarWidget()),
+                  MaterialPageRoute(
+                      builder: (context) => const BottomNavigationBarWidget()),
                 );
-
-
               } on FirebaseAuthException catch (e) {
                 if (kDebugMode) {
                   print("Error creating account: $e");
