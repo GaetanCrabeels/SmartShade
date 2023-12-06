@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 
 class Graphics extends StatefulWidget {
-  const Graphics({Key? key}) : super(key: key);
+  const Graphics({super.key});
 
   @override
   _GraphicsState createState() => _GraphicsState();
@@ -231,7 +231,7 @@ class _GraphicsState extends State<Graphics> {
           child: Column(
             children: [
               SwitchListTile(
-                title: Text('Utiliser ma localisation'),
+                title: const Text('Utiliser ma localisation'),
                 value: useLocation,
                 onChanged: (value) {
                   setState(() {
