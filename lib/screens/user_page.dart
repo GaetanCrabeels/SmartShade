@@ -18,7 +18,7 @@ class UserPage extends StatefulWidget {
 
 class _UserPageState extends State<UserPage> {
   int _degreeDiff = 0;
-  late String _userId;
+  String? _userId;
   late String _houseId = '0';
 
   CollectionReference houses = FirebaseFirestore.instance.collection('houses');

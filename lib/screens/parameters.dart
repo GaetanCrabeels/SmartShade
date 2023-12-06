@@ -37,7 +37,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       Text('UID de l\'utilisateur : ${user.uid}'),
                       ElevatedButton(
                         onPressed: () {
-                          _logout(context);
+                          try {
+                            _logout(context);
+                          } catch (e) {
+                            print('Erreur lors de la déconnexion : $e');
+                          }
                         },
                         child: const Text('Déconnexion'),
                       ),
@@ -100,6 +104,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
         // Déconnectez l'utilisateur
         await FirebaseAuth.instance.signOut();
+        await Future.delayed(Duration(seconds: 1));
 
         // Redirigez l'utilisateur vers l'écran de connexion
         Navigator.pushReplacementNamed(context, '/login');
@@ -121,7 +126,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
-      Navigator.pushReplacementNamed(context, '/login');
+      if (FirebaseAuth.instance.currentUser == null) {
+        print('Utilisateur déconnecté');
+      } else {
+        print('Erreur lors de la déconnexion de l\'utilisateur');
+      }
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
     } catch (e) {
       if (kDebugMode) {
         print('Erreur lors de la déconnexion de l\'utilisateur : $e');
