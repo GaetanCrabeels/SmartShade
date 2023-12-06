@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/widgets/reusable.dart';
 import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
+import 'package:flutter_application_1/utils/password_utils.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -53,10 +56,13 @@ class _SignUpState extends State<SignUp> {
             ),
             signInsignUpButton(context, false, () async {
               try {
+                final salt = generateSalt();
+                final hashedPassword =
+                    await hashPassword(_passwordTextController.text, salt);
                 UserCredential userCredential =
                     await FirebaseAuth.instance.createUserWithEmailAndPassword(
                   email: _emailTextController.text,
-                  password: _passwordTextController.text,
+                  password: hashedPassword,
                 );
 
                 final db = FirebaseFirestore.instance;
@@ -75,8 +81,9 @@ class _SignUpState extends State<SignUp> {
                 db.collection("users").doc(userCredential.user?.uid).set({
                   'fullName': _userNameTextController.text,
                   'email': _emailTextController.text,
-                  'accountCreated': Timestamp.now(),
-                  'Password': _passwordTextController.text,
+                  'accountCreated': FieldValue.serverTimestamp(),
+                  'Password': hashedPassword,
+                  'salt': salt,
                   'houseId': _houseId,
                 }).onError((e, _) {
                   if (kDebugMode) {
@@ -98,9 +105,9 @@ class _SignUpState extends State<SignUp> {
                   MaterialPageRoute(
                       builder: (context) => const BottomNavigationBarWidget()),
                 );
-              } on FirebaseAuthException catch (e) {
+              } on FirebaseAuthException {
                 if (kDebugMode) {
-                  print("Error creating account: $e");
+                  print("Error creating account");
                 }
                 // Gérer les erreurs d'authentification ici
               }

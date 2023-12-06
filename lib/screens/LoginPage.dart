@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application_1/utils/password_utils.dart';
 import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 import 'sign_up.dart';
 
@@ -12,16 +14,35 @@ class LoginPage extends StatelessWidget {
 
   Future<void> _signInWithEmailAndPassword(BuildContext context) async {
     try {
-      await FirebaseAuth.instance
+      final UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
-      // La connexion a réussi, vous pouvez naviguer vers la page suivante (par exemple, HomePage)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => const BottomNavigationBarWidget()),
-      );
+
+      final DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (userSnapshot.exists) {
+        final String storedSalt = userSnapshot['salt'];
+        final String storedHashedPassword = userSnapshot['Password'];
+
+        final String hashedPassword = await hashPassword(password, storedSalt);
+
+        if (hashedPassword == storedHashedPassword) {
+          // La connexion a réussi, vous pouvez naviguer vers la page suivante (par exemple, HomePage)
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const BottomNavigationBarWidget(),
+            ),
+          );
+        } else {
+          // La connexion a échoué, vous pouvez afficher un message d'erreur ou effectuer d'autres actions
+          displayErrorMessage(context, 'Mot de passe incorrect.');
+        }
+      }
     } catch (e) {
-      // La connexion a échoué, vous pouvez afficher un message d'erreur ou effectuer d'autres actions
+      // Handle other authentication errors
       displayErrorMessage(context, e);
     }
   }
