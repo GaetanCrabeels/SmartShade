@@ -96,6 +96,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     if (currentUser != null) {
       try {
+        DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+
+        String houseId = '';
+
+        if (userSnapshot.exists) {
+          houseId = userSnapshot['houseId'];
+          if (houseId.isNotEmpty) {
+            await FirebaseFirestore.instance
+                .collection('houses')
+                .doc(houseId)
+                .delete();
+          }
+        }
+
         // Supprimer l'utilisateur de la base de données
         await FirebaseFirestore.instance
             .collection('users')

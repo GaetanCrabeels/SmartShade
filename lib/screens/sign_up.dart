@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -71,6 +69,7 @@ class _SignUpState extends State<SignUp> {
                 DocumentReference houseRef = await db.collection("houses").add({
                   'house_name': 'My House',
                   'house_temperature': 20,
+                  'shutter_temperature_delta_bool': false,
                   'shutter_temperature_delta': 2,
                 });
 

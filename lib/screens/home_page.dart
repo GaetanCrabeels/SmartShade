@@ -19,8 +19,6 @@ class _HomePageState extends State<HomePage> {
 
   String? _userId;
   late String _houseId;
-  late String apiEndpoint =
-      'https://agromet.be/fr/agromet/api/v3/get_pameseb_hourly/tsa/18/2023-11-26/2023-11-26/';
 
   void _toggleLoading() {
     setState(() {
@@ -30,6 +28,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _fetchTemperature() async {
     try {
+      DateTime dateToday = DateTime.now();
+      String date = dateToday.toString().substring(0, 10);
+      late String apiEndpoint =
+          'https://agromet.be/fr/agromet/api/v3/get_pameseb_hourly/tsa/18/$date/$date/';
       final response = await http.get(Uri.parse(apiEndpoint));
 
       if (response.statusCode == 200) {

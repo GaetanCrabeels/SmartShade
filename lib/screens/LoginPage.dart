@@ -29,16 +29,11 @@ class LoginPage extends StatelessWidget {
             await hashPassword(_passwordTextController.text, storedSalt);
 
         if (hashedPassword == storedHashedPassword) {
-          // The password matches the stored hashed password
-          // Sign in with Firebase Authentication using the original password
           final UserCredential userCredential =
               await FirebaseAuth.instance.signInWithEmailAndPassword(
             email: _emailTextController.text.trim(),
             password: hashedPassword,
           );
-
-          // The sign-in was successful
-          // You can access the user using userCredential.user
           User? user = userCredential.user;
 
           Future.delayed(const Duration(seconds: 1), () {
