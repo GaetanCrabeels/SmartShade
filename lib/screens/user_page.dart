@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 class UserPage extends StatefulWidget {
   // ignore: non_constant_identifier_names
   final String user_name;
+  final FirebaseFirestore firestore;
   // ignore: non_constant_identifier_names
-  const UserPage({super.key, required this.user_name});
+  const UserPage({Key? key, required this.user_name, required this.firestore})
+      : super(key: key);
 
   @override
   // ignore: library_private_types_in_public_api

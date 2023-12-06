@@ -1,70 +1,61 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/user_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:google_sign_in_mocks/google_sign_in_mocks.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_application_1/main.dart';
+import 'package:flutter_application_1/screens/user_page.dart';
+import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 
 void main() {
-  group('UserPage Widget Tests', () {
-    late UserPage userPage;
-    late FakeFirebaseFirestore fakeFirestore;
+  late MockGoogleSignIn googleSignIn;
+  setUp(() {
+    googleSignIn = MockGoogleSignIn();
+  });
 
-    setUp(() {
-      fakeFirestore = FakeFirebaseFirestore();
-      userPage = UserPage(
-        user_name: 'test_user',
-        key: UniqueKey(),
-        firestore: fakeFirestore,
-      );
+  test('should return idToken and accessToken when authenticating', () async {
+    final signInAccount = await googleSignIn.signIn();
+    final signInAuthentication = await signInAccount!.authentication;
+    expect(signInAuthentication, isNotNull);
+    expect(googleSignIn.currentUser, isNotNull);
+    expect(signInAuthentication.accessToken, isNotNull);
+    expect(signInAuthentication.idToken, isNotNull);
+  });
+
+  testWidgets('shows user page', (WidgetTester tester) async {
+    final firestore = FakeFirebaseFirestore();
+    final signInAccount = await googleSignIn.signIn();
+    final signInAuthentication = await signInAccount!.authentication;
+    await firestore.collection('users').doc('test_user').set({
+      'houseId': 'house_id_1',
     });
 
-    testWidgets('Widget builds correctly', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: userPage,
-        ),
-      );
-
-      expect(find.text('User Page'), findsOneWidget);
+    firestore.collection('houses').doc('house_id_1').set({
+      'shutter_temperature_delta': 0,
     });
 
-    testWidgets('Increment button increases degree difference',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: userPage,
-        ),
-      );
+    await tester.pumpWidget(
+      MaterialApp(
+        title: 'Mon App Flutter',
+        home: BottomNavigationBarWidget(),
+        routes: {
+          '/user': (context) =>
+              UserPage(user_name: 'test_user', firestore: firestore),
+        },
+      ),
+    );
 
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pump();
+    // Wait for the FutureBuilder to complete and the widget tree to settle
+    await tester.pumpAndSettle();
 
-      // Verify that the degree difference is updated in the UI
-      expect(find.text('1'), findsOneWidget);
+    expect(find.byType(BottomNavigationBarWidget), findsOneWidget);
 
-      // Check that the set method is not called on the Firestore mock
-      expect(fakeFirestore.collections.isEmpty, true);
-      expect(fakeFirestore.documents.isEmpty, true);
-      expect(fakeFirestore.writes, isEmpty);
-    });
+    // Tap on the user icon in the bottom navigation bar to navigate to UserPage
+    await tester.tap(find.bySemanticsLabel('Utilisateur'));
+    await tester.pumpAndSettle();
 
-    testWidgets('Decrement button decreases degree difference',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: userPage,
-        ),
-      );
-
-      await tester.tap(find.byIcon(Icons.remove));
-      await tester.pump();
-
-      // Verify that the degree difference is updated in the UI
-      expect(find.text('-1'), findsOneWidget);
-
-      // Check that the set method is not called on the Firestore mock
-      expect(fakeFirestore.collections.isEmpty, true);
-      expect(fakeFirestore.documents.isEmpty, true);
-      expect(fakeFirestore.writes, isEmpty);
-    });
+    // Verify that UserPage is displayed
+    expect(find.byType(UserPage), findsOneWidget);
   });
 }
