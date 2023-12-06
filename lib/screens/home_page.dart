@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
             });
           } else {
             setState(() {
-              _outsideTemp = 'N/A'; // No temperature data available
+              _outsideTemp = 'N/A';
             });
           }
         } else {
@@ -57,13 +57,11 @@ class _HomePageState extends State<HomePage> {
         if (kDebugMode) {
           print('Failed to fetch temperature data: ${response.statusCode}');
         }
-        // Handle error if needed
       }
     } catch (error) {
       if (kDebugMode) {
         print('Error fetching temperature data: $error');
       }
-      // Handle error if needed
     }
   }
 

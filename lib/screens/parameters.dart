@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -28,7 +28,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const CircularProgressIndicator();
                 } else if (snapshot.hasError) {
-                  return const Text('Erreur lors de la récupération de l\'utilisateur');
+                  return const Text(
+                      'Erreur lors de la récupération de l\'utilisateur');
                 } else if (snapshot.hasData) {
                   final User user = snapshot.data!;
                   return Column(
@@ -36,9 +37,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       Text('UID de l\'utilisateur : ${user.uid}'),
                       ElevatedButton(
                         onPressed: () {
+                          _logout(context);
+                        },
+                        child: const Text('Déconnexion'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
                           _showDeleteUserDialog(context);
                         },
-                        child: Text('Supprimer le compte'),
+                        child: const Text('Supprimer le compte'),
                       ),
                     ],
                   );
@@ -58,20 +65,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirmation'),
-          content: Text('Êtes-vous sûr de vouloir supprimer votre compte utilisateur ?'),
+          title: const Text('Confirmation'),
+          content: const Text(
+              'Êtes-vous sûr de vouloir supprimer votre compte utilisateur ?'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Ferme la boîte de dialogue
               },
-              child: Text('Annuler'),
+              child: const Text('Annuler'),
             ),
             TextButton(
               onPressed: () async {
                 await _deleteCurrentUser(context);
               },
-              child: Text('Supprimer'),
+              child: const Text('Supprimer'),
             ),
           ],
         );
@@ -84,23 +92,45 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     if (currentUser != null) {
       try {
-        // Déconnectez l'utilisateur
-        await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).delete();
+        // Supprimer l'utilisateur de la base de données
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .delete();
 
+        // Déconnectez l'utilisateur
         await FirebaseAuth.instance.signOut();
 
         // Redirigez l'utilisateur vers l'écran de connexion
         Navigator.pushReplacementNamed(context, '/login');
-
       } catch (e) {
-        print('Erreur lors de la déconnexion de l\'utilisateur : $e');
+        if (kDebugMode) {
+          print('Erreur lors de la suppression de l\'utilisateur : $e');
+        }
         // Gérer l'erreur, par exemple, afficher un message à l'utilisateur
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erreur lors de la déconnexion de l\'utilisateur'),
+            content: Text('Erreur lors de la suppression de l\'utilisateur'),
           ),
         );
       }
+    }
+  }
+
+  // Fonction pour déconnecter l'utilisateur
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Erreur lors de la déconnexion de l\'utilisateur : $e');
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erreur lors de la déconnexion de l\'utilisateur'),
+        ),
+      );
     }
   }
 }

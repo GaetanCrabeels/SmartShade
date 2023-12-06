@@ -3,8 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 import 'sign_up.dart';
 
+// ignore: must_be_immutable
 class LoginPage extends StatelessWidget {
-  LoginPage({super.key}); // Remove the const keyword here
+  LoginPage({super.key});
 
   String email = ''; // Variable d'état pour l'adresse e-mail
   String password = ''; // Variable d'état pour le mot de passe
@@ -21,10 +22,31 @@ class LoginPage extends StatelessWidget {
       );
     } catch (e) {
       // La connexion a échoué, vous pouvez afficher un message d'erreur ou effectuer d'autres actions
-      print('Erreur de connexion : $e');
-      print(email);
-      print(password);
+      displayErrorMessage(context, e);
     }
+  }
+
+  void displayErrorMessage(BuildContext context, dynamic e) {
+    String errorMessage = 'Erreur de connexion';
+    if (e is FirebaseAuthException) {
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'Aucun utilisateur trouvé avec cette adresse e-mail.';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Mot de passe incorrect.';
+          break;
+      }
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorMessage),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+
+    // Affiche l'erreur dans la console
+    print('Erreur de connexion : $e');
   }
 
   @override
