@@ -50,10 +50,10 @@ class _ParametersState extends State<Parameters> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => FermetureTempoScreen()),
+                      builder: (context) => const FermetureTempoScreen()),
                 );
               },
-              child: Text('Menu gestion des capteurs'),
+              child: const Text('Menu gestion des capteurs'),
             ),
           ],
         ),

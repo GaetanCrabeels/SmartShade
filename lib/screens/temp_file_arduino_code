@@ -1,0 +1,75 @@
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <FirebaseArduino.h>
+
+#define WIFI_SSID "SSID"
+#define WIFI_PASSWORD "password"
+
+#define API_KEY "api key"
+#define FIREBASE_PROJECT_ID "id project"
+#define USER_EMAIL "mail"
+#define USER_PASSWORD "password"
+#define PIN_CAPTEURS "D1" // numéro broche sur arduino pour les capteurs 
+
+bool capteursActifs = true; // valeur initiale capteurs (activés par défaut)
+
+FirebaseData firebaseData;
+
+void connectWiFi() {
+  Serial.println("Connecting to WiFi...");
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+  }
+  Serial.println("Connected to WiFi");
+}
+
+void connectFirebase() {
+  Firebase.begin(API_KEY, FIREBASE_PROJECT_ID);
+}
+
+void setup() {
+  pinMode(PIN_CAPTEURS, OUTPUT);
+  connectWiFi();
+  connectFirebase();
+}
+
+void checkFirebaseCommand() {
+  if (Firebase.getInt(firebaseData, "/commandeCapteurs/etat/0")) {
+    int firebaseCommand = firebaseData.intData();
+    Serial.print("Commande 0: ");
+    Serial.println(firebaseCommand); // afficher valeur récupérée
+    if (firebaseCommand == 0) {
+      capteursActifs = false; // désactiver capteurs si la commande est 0
+    }
+  }
+
+  if (Firebase.getInt(firebaseData, "/commandeCapteurs/etat/1")) {
+    int firebaseCommand = firebaseData.intData();
+    Serial.print("Commande 1: ");
+    Serial.println(firebaseCommand); 
+    if (firebaseCommand == 1) {
+      capteursActifs = true; // activer capteurs si la commande est 1
+    }
+  }
+}
+
+void activateSensors() {
+  digitalWrite(PIN_CAPTEURS, HIGH); // allumer capteurs
+}
+
+void deactivateSensors() {
+  digitalWrite(PIN_CAPTEURS, LOW); // eteindre capteurs 
+}
+
+void loop() {
+  checkFirebaseCommand();
+
+  if (capteursActifs) {
+    activateSensors();
+  } else {
+    deactivateSensors();
+  }
+
+
+}

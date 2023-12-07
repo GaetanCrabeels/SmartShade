@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class FermetureTempoScreen extends StatefulWidget {
+class FermetureTempoScreen extends StatelessWidget {
   const FermetureTempoScreen({Key? key}) : super(key: key);
 
-  @override
-  _FermetureTempoScreenState createState() => _FermetureTempoScreenState();
-}
-
-class _FermetureTempoScreenState extends State<FermetureTempoScreen> {
-  bool _autoModeEnabled = true;
-
-  void _toggleAutoMode() {
-    // ici pour ajouter la logique pour activer/désactiver les capteurs
+  Future<void> sendCommand(String command) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('commandeCapteurs')
+          .doc('etat')
+          .set({'valeur': command});
+      print('Commande envoyée avec succès');
+    } catch (e) {
+      print('Erreur : $e');
+    }
   }
 
   @override
@@ -24,20 +26,17 @@ class _FermetureTempoScreenState extends State<FermetureTempoScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Switch(
-              value: _autoModeEnabled,
-              onChanged: (value) {
-                setState(() {
-                  _autoModeEnabled = value;
-                  _toggleAutoMode();
-                });
+            ElevatedButton(
+              onPressed: () {
+                sendCommand('1');
               },
+              child: const Text('Activer les capteurs de luminosité'),
             ),
-            Text(
-              _autoModeEnabled
-                  ? 'Mode Automatique Activé'
-                  : 'Mode Automatique Désactivé',
-              style: TextStyle(fontSize: 18),
+            ElevatedButton(
+              onPressed: () {
+                sendCommand('0');
+              },
+              child: const Text('Désactiver les capteurs de luminosité'),
             ),
           ],
         ),
