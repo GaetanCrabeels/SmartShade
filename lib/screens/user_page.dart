@@ -18,8 +18,9 @@ class UserPage extends StatefulWidget {
 
 class _UserPageState extends State<UserPage> {
   int _degreeDiff = 0;
-  late String _userId;
+  String? _userId;
   late String _houseId = '0';
+  late bool useTemperatureDelta = false;
 
   CollectionReference houses = FirebaseFirestore.instance.collection('houses');
 
@@ -49,6 +50,8 @@ class _UserPageState extends State<UserPage> {
             if (houseSnapshot.exists) {
               setState(() {
                 _degreeDiff = houseSnapshot['shutter_temperature_delta'];
+                useTemperatureDelta =
+                    houseSnapshot['shutter_temperature_delta_bool'];
               });
             } else {
               if (kDebugMode) {
@@ -85,7 +88,13 @@ class _UserPageState extends State<UserPage> {
 
           return Column(
             children: [
-              const Text('Mode d\'utilisation des volets: '),
+              const Text('Activation du mode de différence de temperature : '),
+              Switch(
+                value: useTemperatureDelta,
+                onChanged: (value) {
+                  _updateTemperatureDelta(value);
+                },
+              ),
               Container(
                 padding: const EdgeInsets.all(16.0),
                 alignment: Alignment.center,
@@ -122,6 +131,33 @@ class _UserPageState extends State<UserPage> {
         },
       ),
     );
+  }
+
+  void _updateTemperatureDelta(bool value) {
+    setState(() {
+      useTemperatureDelta = value;
+
+      houses.doc(_houseId).update({
+        'shutter_temperature_delta_bool': value,
+      }).then((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Value updated successfully'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }).catchError((error) {
+        if (kDebugMode) {
+          print('Error updating document: $error');
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error updating document'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      });
+    });
   }
 
   void _incrementNumber() {

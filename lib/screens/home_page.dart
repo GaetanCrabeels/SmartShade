@@ -17,10 +17,8 @@ class _HomePageState extends State<HomePage> {
   String? _houseTemp;
   String? _outsideTemp;
 
-  late String _userId;
+  String? _userId;
   late String _houseId;
-  late String apiEndpoint =
-      'https://agromet.be/fr/agromet/api/v3/get_pameseb_hourly/tsa/18/2023-11-26/2023-11-26/';
 
   void _toggleLoading() {
     setState(() {
@@ -30,6 +28,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _fetchTemperature() async {
     try {
+      DateTime dateToday = DateTime.now();
+      String date = dateToday.toString().substring(0, 10);
+      late String apiEndpoint =
+          'https://agromet.be/fr/agromet/api/v3/get_pameseb_hourly/tsa/18/$date/$date/';
       final response = await http.get(Uri.parse(apiEndpoint));
 
       if (response.statusCode == 200) {
@@ -81,35 +83,36 @@ class _HomePageState extends State<HomePage> {
 
     _fetchTemperature();
 
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _userId = user.uid;
-    }
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        _userId = user.uid;
 
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(_userId)
-        .get()
-        .then((DocumentSnapshot userSnapshot) {
-      if (userSnapshot.exists) {
-        setState(() {
-          _houseId = userSnapshot['houseId'];
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(_userId)
+            .get()
+            .then((DocumentSnapshot userSnapshot) {
+          if (userSnapshot.exists) {
+            setState(() {
+              _houseId = userSnapshot['houseId'];
 
-          FirebaseFirestore.instance
-              .collection('houses')
-              .doc(_houseId)
-              .get()
-              .then((DocumentSnapshot houseSnapshot) {
-            if (houseSnapshot.exists) {
-              setState(() {
-                _houseTemp = houseSnapshot['house_temperature']?.toString();
+              FirebaseFirestore.instance
+                  .collection('houses')
+                  .doc(_houseId)
+                  .get()
+                  .then((DocumentSnapshot houseSnapshot) {
+                if (houseSnapshot.exists) {
+                  setState(() {
+                    _houseTemp = houseSnapshot['house_temperature']?.toString();
+                  });
+                } else {
+                  if (kDebugMode) {
+                    print('Document does not exist on the database');
+                  }
+                }
               });
-            } else {
-              if (kDebugMode) {
-                print('Document does not exist on the database');
-              }
-            }
-          });
+            });
+          }
         });
       }
     });

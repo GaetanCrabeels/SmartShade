@@ -37,22 +37,6 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      if (_selectedIndex == 0) {
-        _widgetOptions[0] = const HomePage();
-      } else if (_selectedIndex == 1) {
-        _widgetOptions[1] = const ShutterList(
-          houseId: 'house_id_1',
-        );
-      } else if (_selectedIndex == 2) {
-        _widgetOptions[2] = UserPage(
-          user_name: 'user_id_1',
-          firestore: FirebaseFirestore.instance,
-        );
-      } else if (_selectedIndex == 3) {
-        _widgetOptions[3] = const UserProfilePage();
-      } else if (_selectedIndex == 4) {
-        _widgetOptions[4] = const Graphics();
-      }
     });
   }
 

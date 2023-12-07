@@ -37,7 +37,6 @@ dependencies:
   provider: ^5.0.0
   flutter_bloc: ^7.0.1
 
-
   geolocator: ^7.7.0
 
   http: ^0.13.3

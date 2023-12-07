@@ -1,27 +1,60 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application_1/utils/password_utils.dart';
 import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
+import 'package:flutter_application_1/widgets/reusable.dart';
 import 'sign_up.dart';
 
-// ignore: must_be_immutable
 class LoginPage extends StatelessWidget {
-  LoginPage({super.key});
+  LoginPage({Key? key});
 
-  String email = ''; // Variable d'état pour l'adresse e-mail
-  String password = ''; // Variable d'état pour le mot de passe
+  final TextEditingController _passwordTextController = TextEditingController();
+  final TextEditingController _emailTextController = TextEditingController();
 
   Future<void> _signInWithEmailAndPassword(BuildContext context) async {
     try {
-      await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: password);
-      // La connexion a réussi, vous pouvez naviguer vers la page suivante (par exemple, HomePage)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => const BottomNavigationBarWidget()),
-      );
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: _emailTextController.text)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final DocumentSnapshot userSnapshot = querySnapshot.docs.first;
+
+        final String storedSalt = userSnapshot['salt'];
+        final String storedHashedPassword = userSnapshot['Password'];
+
+        final String hashedPassword =
+            await hashPassword(_passwordTextController.text, storedSalt);
+
+        if (hashedPassword == storedHashedPassword) {
+          final UserCredential userCredential =
+              await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: _emailTextController.text.trim(),
+            password: hashedPassword,
+          );
+          // ignore: unused_local_variable
+          User? user = userCredential.user;
+
+          Future.delayed(const Duration(seconds: 1), () {
+            Navigator.of(context).pushReplacement<void, dynamic>(
+              MaterialPageRoute(
+                  builder: (context) => const BottomNavigationBarWidget()),
+            );
+          });
+        } else {
+          // Passwords do not match
+          displayErrorMessage(context, 'Mot de passe incorrect.');
+        }
+      } else {
+        // User not found in Firestore
+        displayErrorMessage(
+            context, 'Aucun utilisateur trouvé avec cette adresse e-mail.');
+      }
     } catch (e) {
-      // La connexion a échoué, vous pouvez afficher un message d'erreur ou effectuer d'autres actions
+      print('Error : $e');
+      // Handle other authentication errors
       displayErrorMessage(context, e);
     }
   }
@@ -45,6 +78,8 @@ class LoginPage extends StatelessWidget {
       ),
     );
 
+    print('Email: $_emailTextController, Password: $_passwordTextController');
+
     // Affiche l'erreur dans la console
     print('Erreur de connexion : $e');
   }
@@ -60,22 +95,13 @@ class LoginPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              onChanged: (value) {
-                // Mettez à jour votre variable d'email ici
-                email = value;
-              },
-              decoration: const InputDecoration(labelText: 'Adresse e-mail'),
+            reusableTextField("Enter Email ID", Icons.email_outlined, false,
+                _emailTextController, context),
+            const SizedBox(
+              height: 20,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              onChanged: (value) {
-                // Mettez à jour votre variable de mot de passe ici
-                password = value;
-              },
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Mot de passe'),
-            ),
+            reusableTextField("Enter Password", Icons.lock_outline, true,
+                _passwordTextController, context),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
