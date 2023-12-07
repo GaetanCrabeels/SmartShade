@@ -34,6 +34,7 @@ class LoginPage extends StatelessWidget {
             email: _emailTextController.text.trim(),
             password: hashedPassword,
           );
+          // ignore: unused_local_variable
           User? user = userCredential.user;
 
           Future.delayed(const Duration(seconds: 1), () {
