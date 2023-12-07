@@ -1,18 +1,22 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class Shutter {
+  final String id;
   final String name;
+  String room;
   bool isOn;
 
-  Shutter({required this.name, this.isOn = false});
+  Shutter({required this.id,required this.name, this.room = "indépendant", this.isOn = false});
 }
 
 class Room {
+  final String id;
   final String name;
   bool isOn;
   List<Shutter> shutters;
 
-  Room({required this.name, this.isOn = false, required this.shutters});
+  Room({required this.id,required this.name, this.isOn = false, required this.shutters});
 }
 
 class ShutterList extends StatefulWidget {
@@ -23,25 +27,87 @@ class ShutterList extends StatefulWidget {
 }
 
 class _ShutterListState extends State<ShutterList> {
-  List<Shutter> shutters = [
-    Shutter(name: 'Volet 1'),
-    Shutter(name: 'Volet 2'),
-    Shutter(name: 'Volet 3'),
-    Shutter(name: 'Volet 4'),
-    //liste de volets a add manuellement pr test
-  ];
 
-  List<Room> rooms = [
-    Room(name: 'Salon', shutters: []),
-    Room(name: 'Chambre', shutters: []),
-    Room(name: 'Cuisine', shutters: []),
-    // liste de piece a add manuellement pr test
-  ];
+  // MISE EN PLACE DE LA LISTE DES VOLETS et Pieces
+  List<Shutter> shutters = [];
+  List<Room> rooms = [];
+
+  CollectionReference shutterCollection = FirebaseFirestore.instance.collection('shutters');
+  CollectionReference roomCollection = FirebaseFirestore.instance.collection('rooms');
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchShuttersFromFirestore();
+    _fetchRoomsFromFirestore();
+    
+  }
+
+  Future<void> _fetchShuttersFromFirestore() async {
+    QuerySnapshot<Object?> snapshot = await shutterCollection.get();
+
+    List<Shutter> fetchedShutters = snapshot.docs.map((doc) {
+      Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+
+      if (data != null) {
+        // Création d'un objet Shutter en utilisant les champs du document Firestore
+        return Shutter(
+          id: doc.id,
+          name: data['shutter_name'] as String,
+          room: data['room_id'] as String,
+          isOn: data['shutter_open'] as bool? ?? false,
+        );
+      } else {
+        // Gérer le cas où les données sont nulles ou absentes
+        return Shutter(id : 'id inconnu',name: 'Nom inconnu', room: 'inconnu');
+      }
+    }).toList();
+
+    setState(() {
+      shutters = fetchedShutters;
+    });
+  }
+
+  Future<void> _fetchRoomsFromFirestore() async {
+    QuerySnapshot<Object?> snapshot = await roomCollection.get();
+
+    List<Room> fetchedRooms = snapshot.docs.map((doc) {
+      Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+
+      if (data != null) {
+        List<String> shutterIDs =
+            List<String>.from(data['shutters'] ?? <String>[]);
+
+        List<Shutter> roomShutters = shutters
+            .where((shutter) => shutterIDs.contains(shutter.id))
+            .toList();
+
+        return Room(
+          id: doc.id,
+          name: data['room_name'] as String,
+          isOn: data['shutters_open'] as bool? ?? false,
+          shutters: roomShutters,
+        );
+      } else {
+        return Room(id : 'inconnu',name: 'Nom inconnu', shutters: []);
+      }
+    }).toList();
+
+    setState(() {
+      rooms = fetchedRooms;
+    });
+  }
+
+
 
   bool showShutters = true; // Toggle pour l'affichage de la liste des volets
   bool showRooms = false; // toggle pour l'affichage de la liste des pieces
 
-  @override
+///////
+///////
+///
+///OK
+  @override 
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -74,7 +140,7 @@ class _ShutterListState extends State<ShutterList> {
     );
   }
 
-  //bouton add volet
+  //bouton add volet OKK
   Widget _addShutterButton() {
     return FloatingActionButton(
       onPressed: () {
@@ -84,7 +150,7 @@ class _ShutterListState extends State<ShutterList> {
     );
   }
 
-  //bouton add piece
+  //bouton add piece Okkk
   Widget _addRoomButton() {
     return FloatingActionButton(
       onPressed: () {
@@ -94,48 +160,106 @@ class _ShutterListState extends State<ShutterList> {
     );
   }
 
-  // liste de volets
+  // liste de volets // Normalement OK
   Widget _buildShutters() {
-    return ListView(
-      children: shutters.map((shutter) {
-        final roomContainingShutter = rooms.firstWhere((room) => room.shutters.contains(shutter), orElse: () => Room(name: 'Aucune pièce', shutters: []));
-        final roomName = roomContainingShutter.name != 'Aucune pièce' ? '(${roomContainingShutter.name})' : '';
-        
-        return ListTile(
-          title: Row(
-            children: [
-              Text(shutter.name),
-              const SizedBox(width: 8),
-              Text(
-                roomName,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-          trailing: Switch(
-            value: shutter.isOn,
-            onChanged: (value) {
-              setState(() {
-                shutter.isOn = value;
-                _updateShutterInRooms(shutter);
-              });
-            },
-          ),
-          onTap: () {
-            _moveShutter(shutter);
+  return ListView(
+    children: shutters.map((shutter) {
+      final roomContainingShutter = rooms.firstWhere(
+        (room) => room.shutters.contains(shutter),
+        orElse: () => Room(id:'id',name: shutter.room, shutters: []),
+      );
+      String roomName = '(${roomContainingShutter.name})'; // Toujours entre parenthèses
+
+      return ListTile(
+        title: Row(
+          children: [
+            Text(shutter.name),
+            const SizedBox(width: 8),
+            Text(
+              roomName,
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        trailing: Switch(
+          value: shutter.isOn,
+          onChanged: (value) {
+            setState(() {
+              shutter.isOn = value;
+              _updateShutterInRooms(shutter);
+              _updateShutterOpenInDatabase(shutter);
+            });
           },
-        );
-      }).toList(),
-    );
-  }
+        ),
+        onTap: () {
+          _moveShutter(shutter);
+        },
+      );
+    }).toList(),
+  );
+}
+
+//update de la database sur l'etat du volet
+void _updateShutterOpenInDatabase(Shutter shutter) {
+
+  DocumentReference documentReference = FirebaseFirestore.instance.collection('shutters').doc(shutter.id);
+
+  
+  documentReference.update({
+    'shutter_open': shutter.isOn, 
+  }).then((value) {
+    print('Shutter updated successfully!');
+  }).catchError((error) {
+    print('Failed to update shutter: $error');
+  });
+}
+
+void _updateShutterRoomInDatabase(Shutter shutter) {
+ 
+  DocumentReference documentReference = FirebaseFirestore.instance.collection('shutters').doc(shutter.id);
+
+  
+  documentReference.update({
+    'room_id': shutter.room, 
+  }).then((value) {
+    print('Shutter updated successfully!');
+  }).catchError((error) {
+    print('Failed to update shutter: $error');
+  });
+}
+
+
+
 
   // ajouter volet
+
+  
   void _addShutter(String name) {
+    final newShutter = Shutter(id: 'generated_id', name: name);
+    
     setState(() {
-      shutters.add(Shutter(name: name));
+      shutters.add(newShutter);
+    });
+
+    // Ajouter le nouveau volet à Firestore
+    shutterCollection.add({
+      'shutter_name': newShutter.name,
+      'shutter_open': newShutter.isOn,
+      'room_id': newShutter.room,
+      'shutter_mov': false,
+
+
+    }).then((value) {
+      print('Shutter added to Firestore successfully!');
+      
+    }).catchError((error) {
+      print('Failed to add shutter to Firestore: $error');
+   
     });
   }
 
+
+  //TEST
   // deplacer volet dans une piece
   void _moveShutter(Shutter shutter) {
     Room? selectedRoom;
@@ -174,6 +298,7 @@ class _ShutterListState extends State<ShutterList> {
                     if (selectedRoom != null) {
                       setState(() {
                         _moveShutterToRoom(shutter, selectedRoom!);
+                        _updateShutterRoomInDatabase(shutter);
                         Navigator.of(context).pop();
                       });
                     }
@@ -190,12 +315,13 @@ class _ShutterListState extends State<ShutterList> {
 
   // deplacer volet dans piece
   void _moveShutterToRoom(Shutter shutter, Room room) {
-    final currentRoom = rooms.firstWhere((room) => room.shutters.contains(shutter), orElse: () => Room(name: '', shutters: []));
+    final currentRoom = rooms.firstWhere((room) => room.shutters.contains(shutter), orElse: () => Room(id:"inconnu",name: '', shutters: []));
 
     setState(() {
       currentRoom.shutters.remove(shutter);
       room.shutters.add(shutter);
       shutter.isOn = room.isOn;
+      shutter.room = room.name;
       _updateShutterInRooms(shutter);
     });
   }
@@ -225,6 +351,7 @@ class _ShutterListState extends State<ShutterList> {
                   setState(() {
                     room.isOn = value;
                     _updateRoomShutters(room);
+                    _updateRoomOpenInDatabase(room);
                   });
                 },
               ),
@@ -245,6 +372,7 @@ class _ShutterListState extends State<ShutterList> {
             setState(() {
               room.shutters.remove(shutter);
               shutters.firstWhere((s) => s.name == shutter.name).isOn = false;
+              _updateShutterDeleteRoomInDatabase(shutter);
             });
           },
           child: const Text('Retirer'),
@@ -253,11 +381,39 @@ class _ShutterListState extends State<ShutterList> {
     }).toList();
   }
 
+void _updateShutterDeleteRoomInDatabase(Shutter shutter) {
+ 
+  DocumentReference documentReference = FirebaseFirestore.instance.collection('shutters').doc(shutter.id);
+
+ 
+  documentReference.update({
+    'room_id': "indépendant", 
+  }).then((value) {
+    print('Room reference deleted successfully for the shutter!');
+  }).catchError((error) {
+    print('Failed to delete room reference for the shutter: $error');
+  });
+}
+
+void _updateRoomOpenInDatabase(Room room) {
+  // Récupérer la référence au document Firestore correspondant à la pièce
+  DocumentReference documentReference = FirebaseFirestore.instance.collection('rooms').doc(room.id);
+
+
+  documentReference.update({
+    'shutters_open': room.isOn,  
+  }).then((value) {
+    print('Room updated successfully!');
+  }).catchError((error) {
+    print('Failed to update room: $error');
+  });
+}
 
   // check les volets dans les pieces
   void _updateRoomShutters(Room room) {
     room.shutters.forEach((shutter) {
       shutters.firstWhere((s) => s.name == shutter.name).isOn = room.isOn;
+      _updateShutterOpenInDatabase(shutter);
     });
   }
 
@@ -336,9 +492,24 @@ class _ShutterListState extends State<ShutterList> {
   }
 
   // ajout de la new peice
-  void _addRoom(String name) {
-    setState(() {
-      rooms.add(Room(name: name, shutters: []));
-    });
-  }
+ void _addRoom(String name) {
+  final newRoom = Room(id: name, name: name, shutters: []);
+
+  setState(() {
+    rooms.add(newRoom);
+  });
+
+  // Ajouter la nouvelle pièce à Firestore
+  roomCollection.add({
+    'room_name': newRoom.name,
+    'shutters_open': newRoom.isOn,
+  }).then((value) {
+    print('Room added to Firestore successfully!');
+    
+  }).catchError((error) {
+    print('Failed to add room to Firestore: $error');
+   
+  });
+}
+
 }
