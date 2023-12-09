@@ -20,6 +20,7 @@ class _HomePageState extends State<HomePage> {
 
   String? _userId;
   late String _houseId;
+  late List<Map<String, dynamic>> shutterList = [];
 
   void _toggleLoading() {
     setState(() {
@@ -96,6 +97,30 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<List<Map<String, dynamic>>> fetchShutterInfo(String houseId) async {
+    try {
+      // Fetch the shutters from the database using houseId
+      QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+          .instance
+          .collection('shutters')
+          .where('houseId', isEqualTo: houseId)
+          .get();
+
+      // Extract shutter information from the snapshot
+      List<Map<String, dynamic>> shutterInfoList = snapshot.docs.map((shutter) {
+        return {
+          'shutter_name': shutter['shutter_name'] ?? 'N/A',
+          'shutter_open': shutter['shutter_open'] ?? false,
+        };
+      }).toList();
+
+      return shutterInfoList;
+    } catch (error) {
+      print('Error fetching shutter information: $error');
+      return []; // Return an empty list in case of an error
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -133,6 +158,12 @@ class _HomePageState extends State<HomePage> {
               getOpenedShuttersCount(_houseId).then((count) {
                 setState(() {
                   numberOfOpenedShutters = count;
+                });
+              });
+
+              fetchShutterInfo(_houseId).then((shutterInfoList) {
+                setState(() {
+                  shutterList = shutterInfoList;
                 });
               });
             });
@@ -177,8 +208,7 @@ class _HomePageState extends State<HomePage> {
                       Colors.blue[400]!),
                 ],
               ),
-              const SizedBox(height: 16),
-              Text('Nombre de volets ouverts : $numberOfOpenedShutters'),
+
               const SizedBox(height: 16),
               Center(
                 child: Row(
@@ -206,35 +236,58 @@ class _HomePageState extends State<HomePage> {
                         ),
                         fixedSize: const Size(150, 50),
                       ),
-                      child:
-                          const Text('Ouvrir', style: TextStyle(fontSize: 20)),
+                      child: const Text('Ouvrir',
+                          style: TextStyle(fontSize: 20, color: Colors.black)),
                     ),
                     const SizedBox(width: 16),
                     ElevatedButton(
-                      onPressed: () {
-                        _toggleLoading();
-                        _setShutterState(shutterId, false);
-                        Future.delayed(const Duration(seconds: 5), () {
+                        onPressed: () {
                           _toggleLoading();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Fermeture des volets terminée'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          _setShutterState(shutterId, false);
+                          Future.delayed(const Duration(seconds: 5), () {
+                            _toggleLoading();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Fermeture des volets terminée'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          fixedSize: const Size(150, 50),
                         ),
-                        fixedSize: const Size(150, 50),
-                      ),
-                      child:
-                          const Text('Fermer', style: TextStyle(fontSize: 20)),
-                    ),
+                        child: const Text('Fermer',
+                            style:
+                                TextStyle(fontSize: 20, color: Colors.white))),
                   ],
+                ),
+              ),
+              const Divider(
+                height: 32,
+                thickness: 2,
+                color: Colors.black,
+                indent: 20,
+                endIndent: 20,
+              ),
+              Text('Nombre de volets ouverts : $numberOfOpenedShutters',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              // Display the shutters
+              SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Column(
+                  children: shutterList.map((shutter) {
+                    return buildShutterCard(
+                      shutter['shutter_name'],
+                      shutter['shutter_open'],
+                    );
+                  }).toList(),
                 ),
               ),
             ],
@@ -274,6 +327,37 @@ class _HomePageState extends State<HomePage> {
               Text(
                 '$value°C',
                 style: const TextStyle(fontSize: 20),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildShutterCard(String shutterName, bool isOpen) {
+    Color cardColor = isOpen ? Colors.green : Colors.red;
+
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.all(2),
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                shutterName,
+                style: const TextStyle(fontSize: 16, color: Colors.white),
+              ),
+              Text(
+                isOpen ? 'Ouvert' : 'Fermé',
+                style: const TextStyle(fontSize: 14, color: Colors.white),
               ),
             ],
           ),
