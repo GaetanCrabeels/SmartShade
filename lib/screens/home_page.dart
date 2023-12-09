@@ -138,13 +138,30 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Icon(Icons.house, size: 100),
-              Text('${_houseTemp ?? 'N/A'}°C',
-                  style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 16),
-              const Icon(Icons.wb_sunny_outlined, size: 100),
-              Text('${_outsideTemp ?? 'N/A'}°C',
-                  style: const TextStyle(fontSize: 20)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Column(
+                    children: [
+                      const Text('Température maison',
+                          style: TextStyle(fontSize: 16)),
+                      const Icon(Icons.house, size: 100),
+                      Text('${_houseTemp ?? 'N/A'}°C',
+                          style: const TextStyle(fontSize: 20)),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    children: [
+                      const Text('Température extérieure',
+                          style: TextStyle(fontSize: 16)),
+                      const Icon(Icons.wb_sunny_outlined, size: 100),
+                      Text('${_outsideTemp ?? 'N/A'}°C',
+                          style: const TextStyle(fontSize: 20)),
+                    ],
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               Center(
                 child: Row(
