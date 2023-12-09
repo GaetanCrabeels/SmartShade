@@ -74,6 +74,11 @@ void loop() {
   bool shutterOpen = false; // Initialise à false par défaut
   bool shutterMov = false;
   bool shutterDelta = false;
+  bool shutterDeltaBool = false;
+  bool shutterHourBool = false;
+  float shutterHourOpen = NAN;
+  float shutterHourClose = NAN;
+
   String shutterOpenString = "";
   String shutterMovString = "";
   float temperature = NAN;
@@ -82,56 +87,119 @@ void loop() {
   if(Firebase.Firestore.getDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPathDelta.c_str(), mask.c_str())) {
     Serial.printf("Firebase response: %s\n", fbdo.payload().c_str());
 
-    // Analyser le JSON pour obtenir la valeur de shutter_open
-    DynamicJsonDocument jsonDocument(1024);
-    deserializeJson(jsonDocument, fbdo.payload());
 
-    if (jsonDocument.containsKey("fields") && jsonDocument["fields"].containsKey("shutter_temperature_delta_bool")) {
-      shutterDelta = jsonDocument["fields"]["shutter_temperature_delta_bool"]["booleanValue"];
-      Serial.println(String(jsonDocument["fields"]["shutter_temperature_delta_bool"]["booleanValue"]));
-    
-      HttpClient http;
-      String apiUrl = "https://agromet.be/fr/agromet/api/v3/get_pameseb_hourly/tsa/18/";
+    DynamicJsonDocument jsonHouseDocument(1024);
+    deserializeJson(jsonHouseDocument, fbdo.payload());
 
-      char currentDate[11];
-      snprintf(currentDate, sizeof(currentDate), "%04d-%02d-%02d", year(), month(), day());
-      apiUrl += currentDate;
-      apiUrl += "/";
-      apiUrl += currentDate;
-      apiUrl += "/";
+    if (jsonHouseDocument.containsKey("fields") && jsonHouseDocument["fields"].containsKey("shutter_temperature_delta_bool") 
+      && jsonHouseDocument["fields"].containsKey("shutter_temperature_delta")
+      && jsonHouseDocument["fields"].containsKey("shutter_hour_bool")
+      && jsonHouseDocument["fields"].containsKey("shutter_hour_close") 
+      && jsonHouseDocument["fields"].containsKey("shutter_hour_open")
+      && jsonHouseDocument["fields"].containsKey("house_temperature")) {
 
-      if (http.begin(apiUrl)) {
-        int httpCode = http.GET();
+      shutterDeltaBool = jsonHouseDocument["fields"]["shutter_temperature_delta_bool"]["booleanValue"];
+      shutterDelta = jsonHouseDocument["fields"]["shutter_temperature_delta"]["doubleValue"];
+      shutterHourBool = jsonHouseDocument["fields"]["shutter_hour_bool"]["booleanValue"];
+      shutterHourOpen = jsonHouseDocument["fields"]["shutter_hour_open"]["doubleValue"];
+      shutterHourClose = jsonHouseDocument["fields"]["shutter_hour_close"]["doubleValue"];
+      temperature = jsonHouseDocument["fields"]["house_temperature"]["doubleValue"];
 
-        if(httpCode == HTTP_CODE_OK) {
-          DynamicJsonDocument jsonDocumentApi(1024);
-          deserializeJson(jsonDocumentApi, http.getString());
+      Serial.println(String(jsonHouseDocument["fields"]["shutter_temperature_delta_bool"]["booleanValue"]));
 
-          if (jsonDocumentApi.containsKey("results")) {
-          JsonArray resultsArray = jsonDocumentApi["results"].as<JsonArray>();
-          if (resultsArray.size() > 0) {
-            JsonObject lastResult = resultsArray[resultsArray.size() - 1];
-            String lastTsa = lastResult["tsa"].as<String>();
+      if(shutterDeltaBool) {
+        if(Firebase.Firestore.getDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), mask.c_str())) {
+          Serial.printf("Firebase response: %s\n", fbdo.payload().c_str());
 
-            Serial.println("Last TSA value: " + lastTsa);
+          // Analyser le JSON pour obtenir la valeur de shutter_open
+          DynamicJsonDocument jsonDocument(1024);
+          deserializeJson(jsonDocument, fbdo.payload());
+
+          if (jsonDocument.containsKey("fields") 
+              && jsonDocument["fields"].containsKey("shutter_open")) {
+            
+            shutterOpen = jsonDocument["fields"]["shutter_open"]["booleanValue"];
+            Serial.println(String(jsonDocument["fields"]["shutter_open"]["booleanValue"]));
+
+            HttpClient http;
+            String apiUrl = "https://agromet.be/fr/agromet/api/v3/get_pameseb_hourly/tsa/18/";
+
+            char currentDate[11];
+            snprintf(currentDate, sizeof(currentDate), "%04d-%02d-%02d", year(), month(), day());
+            apiUrl += currentDate;
+            apiUrl += "/";
+            apiUrl += currentDate;
+            apiUrl += "/";
+
+            if (http.begin(apiUrl)) {
+              int httpCode = http.GET();
+
+              if(httpCode == HTTP_CODE_OK) {
+                DynamicJsonDocument jsonDocumentApi(1024);
+                deserializeJson(jsonDocumentApi, http.getString());
+
+                if (jsonDocumentApi.containsKey("results")) {
+                JsonArray resultsArray = jsonDocumentApi["results"].as<JsonArray>();
+                if (resultsArray.size() > 0) {
+                  JsonObject lastResult = resultsArray[resultsArray.size() - 1];
+                  float lastTsa = lastResult["tsa"].as<float>();
+
+                  Serial.println("Last TSA value: " + lastTsa);
+                }
+              }
+              http.end();
+              } else {
+                Serial.printf("HTTP code: %d\n", httpCode);
+              }
+            }
+
+            while (isnan(temperature) || isnan(lastTsa)) {
+              temperature = dht.readTemperature();
+              lastTsa = lastResult["tsa"].as<float>();
+              delay(500);
+            }
+
+            if (abs(lastTsa - temperature) > shutterDelta && shutterOpen) {
+              shutterMov = true;
+            }
+            else if (abs(lastTsa - temperature) < shutterDelta && !shutterOpen){
+              shutterMov = true;
+            }
+            else {
+              shutterMov = false;
+            }
           }
         }
-        http.end();
-        } else {
-          Serial.printf("HTTP code: %d\n", httpCode);
+      }
+      else if (shutterHourBool) {
+        if(Firebase.Firestore.getDocument(&fbdo, FIREBASE_PROJECT_ID, "", documentPath.c_str(), mask.c_str())) {
+          Serial.printf("Firebase response: %s\n", fbdo.payload().c_str());
+          
+          if (jsonDocument.containsKey("fields") 
+            && jsonDocument["fields"].containsKey("shutter_open")) {
+          
+            if (Firebase.getTimestamp(fbdo)) {
+              double serverTimestamp = fbdo.timestamp() / 1000.0; // Convert to seconds
+
+              // Set the server time to current hour
+              setTime(serverTimestamp);
+
+              Serial.println("Server Hour: " + String(hour()));
+
+              shutterHourOpen = jsonDocument["fields"]["shutter_hour_open"]["doubleValue"];
+              shutterHourClose = jsonDocument["fields"]["shutter_hour_close"]["doubleValue"];
+              Serial.println(String(jsonDocument["fields"]["shutter_hour"]["doubleValue"]));
+
+              int currentHour = hour();
+              if ((currentHour >= shutterHourOpen || currentHour < shutterHourClose) && !shutterOpen) {
+                shutterMov = true;
+              } else if ((currentHour >= shutterHourClose || currentHour < shutterOpen) && shutterOpen) {
+                shutterMov = true;
+              } else {
+                shutterMov = false;}
+            }
+          }
         }
-      }
-
-      while (isnan(temperature)) {
-        temperature = dht.readTemperature();
-        delay(500);
-      }
-
-      if (abs(lastTsa - temperature) > shutterDelta) {
-        shutterMov = true;
-      }
-      else {
-        shutterMov = false;
       }
     }
   }

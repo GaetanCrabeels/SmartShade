@@ -19,9 +19,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            const Text('Page de profil de l\'utilisateur'),
             FutureBuilder<User?>(
               future: FirebaseAuth.instance.authStateChanges().first,
               builder: (context, snapshot) {
@@ -32,31 +31,47 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       'Erreur lors de la récupération de l\'utilisateur');
                 } else if (snapshot.hasData) {
                   final User user = snapshot.data!;
-                  return Column(
-                    children: [
-                      Text('UID de l\'utilisateur : ${user.uid}'),
-                      ElevatedButton(
-                        onPressed: () {
-                          try {
-                            _logout(context);
-                          } catch (e) {
-                            print('Erreur lors de la déconnexion : $e');
-                          }
-                        },
-                        child: const Text('Déconnexion'),
+                  return Card(
+                    child: ListTile(
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Email de l\'utilisateur : ${user.email}'),
+                          Text('UID de l\'utilisateur : ${user.uid}'),
+                        ],
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          _showDeleteUserDialog(context);
-                        },
-                        child: const Text('Supprimer le compte'),
-                      ),
-                    ],
+                    ),
                   );
                 } else {
                   return const Text('Utilisateur non connecté');
                 }
               },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    try {
+                      _logout(context);
+                    } catch (e) {
+                      print('Erreur lors de la déconnexion : $e');
+                    }
+                  },
+                  child: const Text('Déconnexion'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _showDeleteUserDialog(context);
+                  },
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.red),
+                  ),
+                  child: const Text('Supprimer le compte',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ],
             ),
           ],
         ),
