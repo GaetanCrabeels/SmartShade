@@ -71,6 +71,9 @@ class _SignUpState extends State<SignUp> {
                   'house_temperature': 20,
                   'shutter_temperature_delta_bool': false,
                   'shutter_temperature_delta': 2,
+                  'shutter_hour_bool': false,
+                  'shutter_hour_open': 08.00,
+                  'shutter_hour_close': 20.00,
                 });
 
                 setState(() {
