@@ -16,6 +16,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = false;
   String? _houseTemp;
   String? _outsideTemp;
+  int numberOfOpenedShutters = 0;
 
   String? _userId;
   late String _houseId;
@@ -77,6 +78,24 @@ class _HomePageState extends State<HomePage> {
       FirebaseFirestore.instance.collection('shutters');
   String shutterId = 'shutter_id_1';
 
+  Future<int> getOpenedShuttersCount(String houseId) async {
+    try {
+      // Fetch the shutters from the database using houseId
+      QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+          .instance
+          .collection('shutters')
+          .where('houseId', isEqualTo: houseId)
+          .where('shutter_open', isEqualTo: true)
+          .get();
+
+      // Return the count of opened shutters
+      return snapshot.size;
+    } catch (error) {
+      print('Error fetching opened shutters: $error');
+      return 0; // Return 0 in case of an error
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -111,6 +130,11 @@ class _HomePageState extends State<HomePage> {
                   }
                 }
               });
+              getOpenedShuttersCount(_houseId).then((count) {
+                setState(() {
+                  numberOfOpenedShutters = count;
+                });
+              });
             });
           }
         });
@@ -141,27 +165,20 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Column(
-                    children: [
-                      const Text('Température maison',
-                          style: TextStyle(fontSize: 16)),
+                  buildCard(
+                      'Température maison',
                       const Icon(Icons.house, size: 100),
-                      Text('${_houseTemp ?? 'N/A'}°C',
-                          style: const TextStyle(fontSize: 20)),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    children: [
-                      const Text('Température extérieure',
-                          style: TextStyle(fontSize: 16)),
+                      _houseTemp ?? 'N/A',
+                      Colors.green[700]!),
+                  buildCard(
+                      'Température extérieure',
                       const Icon(Icons.wb_sunny_outlined, size: 100),
-                      Text('${_outsideTemp ?? 'N/A'}°C',
-                          style: const TextStyle(fontSize: 20)),
-                    ],
-                  ),
+                      _outsideTemp ?? 'N/A',
+                      Colors.blue[400]!),
                 ],
               ),
+              const SizedBox(height: 16),
+              Text('Nombre de volets ouverts : $numberOfOpenedShutters'),
               const SizedBox(height: 16),
               Center(
                 child: Row(
@@ -232,7 +249,36 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+        const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget buildCard(String title, Widget icon, String value, Color colorChosen) {
+    return Card(
+      elevation: 3,
+      color: colorChosen,
+      child: SizedBox(
+        width: 180,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              icon,
+              const SizedBox(height: 16),
+              Text(
+                '$value°C',
+                style: const TextStyle(fontSize: 20),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
