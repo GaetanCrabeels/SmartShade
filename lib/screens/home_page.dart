@@ -70,8 +70,32 @@ class _HomePageState extends State<HomePage> {
   }
 
   //Shutter state update function (open/close) in the database
-  void _setShutterState(String shutterId, bool isOpen) {
-    shutters.doc(shutterId).update({'shutter_open': isOpen});
+  void _setShutterState(String houseId, bool open) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+          .instance
+          .collection('shutters')
+          .where('houseId', isEqualTo: houseId)
+          .where('shutter_open', isEqualTo: !open)
+          .get();
+
+      snapshot.docs.forEach((doc) {
+        doc.reference.update({'shutter_open': open});
+      });
+    } catch (error) {
+      if (kDebugMode) {
+        print('Error setting shutter state: $error');
+      }
+    }
+  }
+
+// Usage:
+  void _setShutterOpen(String houseId) async {
+    _setShutterState(houseId, true);
+  }
+
+  void _setShutterClose(String houseId) async {
+    _setShutterState(houseId, false);
   }
 
   // function to get the shutter id from the database
@@ -81,7 +105,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<int> getOpenedShuttersCount(String houseId) async {
     try {
-      // Fetch the shutters from the database using houseId
       QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
           .instance
           .collection('shutters')
@@ -89,24 +112,21 @@ class _HomePageState extends State<HomePage> {
           .where('shutter_open', isEqualTo: true)
           .get();
 
-      // Return the count of opened shutters
       return snapshot.size;
     } catch (error) {
       print('Error fetching opened shutters: $error');
-      return 0; // Return 0 in case of an error
+      return 0;
     }
   }
 
   Future<List<Map<String, dynamic>>> fetchShutterInfo(String houseId) async {
     try {
-      // Fetch the shutters from the database using houseId
       QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
           .instance
           .collection('shutters')
           .where('houseId', isEqualTo: houseId)
           .get();
 
-      // Extract shutter information from the snapshot
       List<Map<String, dynamic>> shutterInfoList = snapshot.docs.map((shutter) {
         return {
           'shutter_name': shutter['shutter_name'] ?? 'N/A',
@@ -117,7 +137,7 @@ class _HomePageState extends State<HomePage> {
       return shutterInfoList;
     } catch (error) {
       print('Error fetching shutter information: $error');
-      return []; // Return an empty list in case of an error
+      return [];
     }
   }
 
@@ -218,8 +238,8 @@ class _HomePageState extends State<HomePage> {
                     ElevatedButton(
                       onPressed: () {
                         _toggleLoading();
-                        _setShutterState(shutterId, true);
-                        Future.delayed(const Duration(seconds: 5), () {
+                        _setShutterState(_houseId, true);
+                        Future.delayed(const Duration(seconds: 2), () {
                           _toggleLoading();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -227,6 +247,11 @@ class _HomePageState extends State<HomePage> {
                               duration: Duration(seconds: 2),
                             ),
                           );
+                          fetchShutterInfo(_houseId).then((shutterInfoList) {
+                            setState(() {
+                              shutterList = shutterInfoList;
+                            });
+                          });
                         });
                       },
                       style: ElevatedButton.styleFrom(
@@ -243,8 +268,8 @@ class _HomePageState extends State<HomePage> {
                     ElevatedButton(
                         onPressed: () {
                           _toggleLoading();
-                          _setShutterState(shutterId, false);
-                          Future.delayed(const Duration(seconds: 5), () {
+                          _setShutterState(_houseId, false);
+                          Future.delayed(const Duration(seconds: 2), () {
                             _toggleLoading();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -252,6 +277,11 @@ class _HomePageState extends State<HomePage> {
                                 duration: Duration(seconds: 2),
                               ),
                             );
+                            fetchShutterInfo(_houseId).then((shutterInfoList) {
+                              setState(() {
+                                shutterList = shutterInfoList;
+                              });
+                            });
                           });
                         },
                         style: ElevatedButton.styleFrom(
