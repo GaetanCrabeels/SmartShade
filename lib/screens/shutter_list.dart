@@ -31,6 +31,7 @@ class _ShutterListState extends State<ShutterList> {
   // MISE EN PLACE DE LA LISTE DES VOLETS et Pieces
   List<Shutter> shutters = [];
   List<Room> rooms = [];
+  List<Shutter> shutterInRooms = [];
 
   CollectionReference shutterCollection = FirebaseFirestore.instance.collection('shutters');
   CollectionReference roomCollection = FirebaseFirestore.instance.collection('rooms');
@@ -38,12 +39,12 @@ class _ShutterListState extends State<ShutterList> {
   @override
   void initState() {
     super.initState();
-    _fetchShuttersFromFirestore();
-    _fetchRoomsFromFirestore();
+    _fetchShuttersAndRoomsFromFirestore();
+    
     
   }
 
-  Future<void> _fetchShuttersFromFirestore() async {
+  Future<void> _fetchShuttersAndRoomsFromFirestore() async {
     QuerySnapshot<Object?> snapshot = await shutterCollection.get();
 
     List<Shutter> fetchedShutters = snapshot.docs.map((doc) {
@@ -66,22 +67,24 @@ class _ShutterListState extends State<ShutterList> {
     setState(() {
       shutters = fetchedShutters;
     });
+    _fetchRoomsFromFirestore();
   }
 
   Future<void> _fetchRoomsFromFirestore() async {
+    
     QuerySnapshot<Object?> snapshot = await roomCollection.get();
 
     List<Room> fetchedRooms = snapshot.docs.map((doc) {
       Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
 
       if (data != null) {
-        List<String> shutterIDs =
-            List<String>.from(data['shutters'] ?? <String>[]);
-
+        String roomName = data['room_name'] as String;
+  
+        print("ok  $roomName");
         List<Shutter> roomShutters = shutters
-            .where((shutter) => shutterIDs.contains(shutter.id))
+            .where((shutter) => roomName == shutter.room)
             .toList();
-
+        print(roomShutters);
         return Room(
           id: doc.id,
           name: data['room_name'] as String,
