@@ -72,17 +72,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   child: const Text('Supprimer le compte',
                       style: TextStyle(color: Colors.white)),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const FermetureTempoScreen()),
-                    );
-                  },
-                  child: const Text('Menu gestion des capteurs'),
-                ),
               ],
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const FermetureTempoScreen()),
+                );
+              },
+              child: const Text('Menu gestion des capteurs'),
             ),
           ],
         ),
