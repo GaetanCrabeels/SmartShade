@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'fermeture_tempo.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -48,6 +49,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 }
               },
             ),
+            ElevatedButton(
+                onPressed: () {
+                  _launchUrl();
+                },
+                child: const Text('Politique de confidentialité')),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -147,7 +153,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
         // Déconnectez l'utilisateur
         await FirebaseAuth.instance.signOut();
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 1));
 
         // Redirigez l'utilisateur vers l'écran de connexion
         Navigator.pushReplacementNamed(context, '/login');
@@ -186,6 +192,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
           content: Text('Erreur lors de la déconnexion de l\'utilisateur'),
         ),
       );
+    }
+  }
+
+  Future<void> _launchUrl() async {
+    Uri politiqueUrl = Uri.https(
+        'www.iubenda.com', '/privacy-policy/50669483', {'q': '{https}'});
+
+    try {
+      await launchUrl(politiqueUrl);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Erreur lors du lancement de l\'URL : $e');
+      }
+      throw 'Impossible de lancer l\'URL';
     }
   }
 }
