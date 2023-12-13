@@ -15,12 +15,12 @@ class _VoletControlPageState extends State<VoletControlPage> {
   Light? _light;
   StreamSubscription<int>? _subscription;
 
+  // Declare seuilLuminosite here
+  double seuilLuminosite = 5000.0;
+
   void onData(int luxValue) {
     // Utiliser luxValue pour obtenir la luminosité en lux
     double luminosite = luxValue.toDouble();
-
-    // Définir une valeur de seuil pour déterminer s'il fait sombre ou clair
-    double seuilLuminosite = 50.0;
 
     // Vérifier si la luminosité est inférieure au seuil pour déterminer s'il fait sombre
     bool faitSombre = luminosite < seuilLuminosite;
@@ -68,16 +68,19 @@ class _VoletControlPageState extends State<VoletControlPage> {
             style: TextStyle(fontSize: 24),
           ),
           const SizedBox(height: 20),
-          SwitchListTile(
-            title: Text('Ouvrir quand il fait sombre'),
-            value: ouvrirQuandSombre,
+          Slider(
+            value: seuilLuminosite,
+            min: 0,
+            max: 40000,
+            divisions: 8, // Number of divisions, considering 5000 lux increments
             onChanged: (value) {
               setState(() {
-                ouvrirQuandSombre = value;
+                seuilLuminosite = value;
               });
             },
+            label: seuilLuminosite.round().toString() + ' lux',
           ),
-          const SizedBox(height: 20),
+
           ElevatedButton(
             onPressed: () {
               // Exécuter l'action appropriée en fonction du choix de l'utilisateur
@@ -86,10 +89,10 @@ class _VoletControlPageState extends State<VoletControlPage> {
                 // OU
                 // Action à effectuer lorsque les volets sont ouverts et on choisit de fermer quand il fait clair
                 print("Exécuter l'action appropriée ici...");
-                } else {
+              } else {
                 print('Action opposée à effectuer ici...');
-                }
-                },
+              }
+            },
             child: Text(voletsFermes ? 'Ouvrir les volets' : 'Fermer les volets'),
           ),
         ],
@@ -103,5 +106,4 @@ class _VoletControlPageState extends State<VoletControlPage> {
     super.dispose();
   }
 }
-
 
