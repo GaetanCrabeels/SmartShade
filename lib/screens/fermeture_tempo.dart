@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FermetureTempoScreen extends StatelessWidget {
   const FermetureTempoScreen({Key? key}) : super(key: key);
 
+//Methode asynchrone qui envoie commande a firestore
   Future<void> sendCommand(String command) async {
     try {
       await FirebaseFirestore.instance
@@ -16,11 +17,12 @@ class FermetureTempoScreen extends StatelessWidget {
     }
   }
 
+//methode qui crée une page avec 2 bouton, activé et désactivé
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fermeture Temporaire'),
+        title: const Text('Option capteurs de luminosité'),
       ),
       body: Center(
         child: Column(

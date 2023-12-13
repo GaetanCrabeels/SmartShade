@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_navigation_bar.dart'; // Importez la barre de navigation inférieure
-//import 'package:firebase_core/firebase_core.dart';
 
 void main() {
-  //WidgetsFlutterBinding.ensureInitialized();
-  //await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
