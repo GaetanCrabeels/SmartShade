@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+
 class Shutter {
   final String id;
   final String name;
@@ -22,9 +23,19 @@ class Room {
 class ShutterList extends StatefulWidget {
   const ShutterList({Key? key}) : super(key: key);
 
+
+
   @override
-  _ShutterListState createState() => _ShutterListState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Shutters Linked to House 1'),
+      ),
+      body: const ShutterList(houseId: 'house_id_1'),
+    );
+  }
 }
+
 
 class _ShutterListState extends State<ShutterList> {
 
@@ -35,6 +46,7 @@ class _ShutterListState extends State<ShutterList> {
 
   CollectionReference shutterCollection = FirebaseFirestore.instance.collection('shutters');
   CollectionReference roomCollection = FirebaseFirestore.instance.collection('rooms');
+
 
   @override
   void initState() {
@@ -112,6 +124,9 @@ class _ShutterListState extends State<ShutterList> {
 ///OK
   @override 
   Widget build(BuildContext context) {
+    CollectionReference shutters =
+        FirebaseFirestore.instance.collection('shutters');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gestion des Volets'),
@@ -138,6 +153,7 @@ class _ShutterListState extends State<ShutterList> {
           ),
         ],
       ),
+
       body: showShutters ? _buildShutters() : _buildRooms(),
       floatingActionButton: showShutters ? _addShutterButton() : _addRoomButton(), // bouton qui en focntion de  liste affichée montre le bon
     );
@@ -454,6 +470,7 @@ void _updateRoomOpenInDatabase(Room room) {
           ],
         );
       },
+
     );
   }
 
