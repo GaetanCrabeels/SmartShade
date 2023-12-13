@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/home_page.dart';
 import '../screens/shutter_list.dart';
 import '../screens/parameters.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../screens/user_page.dart';
 import '../screens/graphics.dart';
@@ -24,8 +25,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     const ShutterList(
       houseId: 'house_id_1',
     ),
-    const UserPage(
+    UserPage(
       user_name: '',
+      firestore: FirebaseFirestore.instance,
     ),
     const UserProfilePage(),
     const Graphics(),
@@ -35,21 +37,6 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      if (_selectedIndex == 0) {
-        _widgetOptions[0] = const HomePage();
-      } else if (_selectedIndex == 1) {
-        _widgetOptions[1] = const ShutterList(
-          houseId: 'house_id_1',
-        );
-      } else if (_selectedIndex == 2) {
-        _widgetOptions[2] = const UserPage(
-          user_name: 'user_id_1',
-        );
-      } else if (_selectedIndex == 3) {
-        _widgetOptions[3] = const UserProfilePage();
-      } else if (_selectedIndex == 4) {
-        _widgetOptions[4] = const Graphics();
-      }
     });
   }
 
