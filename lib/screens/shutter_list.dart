@@ -1,22 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ShutterListPage extends StatelessWidget {
-  const ShutterListPage({super.key});
+class ShutterListPage extends StatefulWidget {
+  const ShutterListPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
-  _ShutterListState createState() => _ShutterListState();
+  _ShutterListPageState createState() => _ShutterListPageState();
 }
 
-class _ShutterListState extends State<ShutterList> {
+class _ShutterListPageState extends State<ShutterListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shutters Linked to House 1'),
       ),
-      body: const ShutterList(houseId: 'house_id_1'),
+      body: ShutterList(houseId: 'house_id_1'),
     );
   }
 }
@@ -24,7 +23,7 @@ class _ShutterListState extends State<ShutterList> {
 class ShutterList extends StatelessWidget {
   final String houseId;
 
-  const ShutterList({super.key, required this.houseId});
+  const ShutterList({Key? key, required this.houseId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +53,7 @@ class ShutterList extends StatelessWidget {
             children: snapshot.data!.docs.map((DocumentSnapshot document) {
               Map<String, dynamic>? shutterData =
                   document.data() as Map<String, dynamic>?;
-              String shutterName = shutterData?['shutter_name'];
+              String shutterName = shutterData?['shutter_name'] ?? '';
 
               return ElevatedButton(
                 onPressed: () {
@@ -63,14 +62,6 @@ class ShutterList extends StatelessWidget {
                 child: Text(shutterName),
               );
             }).toList(),
-          );
-        },
-      ),
-      body: ListView.builder(
-        itemCount: 20,
-        itemBuilder: (BuildContext context, int index) {
-          return ListTile(
-            title: Text('Volet ${index + 1}'),
           );
         },
       ),

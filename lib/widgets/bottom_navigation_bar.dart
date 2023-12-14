@@ -22,9 +22,9 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     const ShutterList(
       houseId: 'house_id_1',
     ),
-    const UserPage(
-      user_name: '',
-    ),
+    // const UserPage(
+    //   user_name: '',
+    // ),
     const Parameters(),
   ];
 
