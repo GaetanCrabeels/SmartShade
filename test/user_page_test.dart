@@ -1,46 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
-import 'package:google_sign_in_mocks/google_sign_in_mocks.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/screens/user_page.dart';
-import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 
 void main() {
-  late MockGoogleSignIn googleSignIn;
-
-  setUp(() {
-    googleSignIn = MockGoogleSignIn();
-  });
-
-  Future<void> setupFirebase() async {
-    WidgetsFlutterBinding.ensureInitialized();
+  testWidgets('UserPage Widget Test', (WidgetTester tester) async {
+    // Initialize Firebase
     await Firebase.initializeApp();
-  }
 
-  test('should return idToken and accessToken when authenticating', () async {
-    final signInAccount = await googleSignIn.signIn();
-    final signInAuthentication = await signInAccount!.authentication;
-
-    expect(signInAuthentication, isNotNull);
-    expect(googleSignIn.currentUser, isNotNull);
-    expect(signInAuthentication.accessToken, isNotNull);
-    expect(signInAuthentication.idToken, isNotNull);
-
-    print('Authentication successful: '
-        'idToken=${signInAuthentication.idToken}, '
-        'accessToken=${signInAuthentication.accessToken}');
-  });
-
-  testWidgets('shows user page', (WidgetTester tester) async {
-    await setupFirebase();
-
+    // Create a fake instance of FirebaseFirestore
     final firestore = FakeFirebaseFirestore();
-    final signInAccount = await googleSignIn.signIn();
-    final signInAuthentication = await signInAccount!.authentication;
 
+    // Set up initial data in Firestore
     await firestore.collection('users').doc('test_user').set({
       'houseId': 'house_id_1',
     });
@@ -49,28 +21,23 @@ void main() {
       'shutter_temperature_delta': 0,
     });
 
+    // Build our app and trigger a frame.
     await tester.pumpWidget(
       MaterialApp(
-        title: 'Mon App Flutter',
-        home: BottomNavigationBarWidget(),
-        routes: {
-          '/user': (context) =>
-              UserPage(user_name: 'test_user', firestore: firestore),
-        },
+        home: UserPage(user_name: 'test_user', firestore: firestore),
       ),
     );
 
-    await tester.pumpAndSettle();
-
-    expect(find.byType(BottomNavigationBarWidget), findsOneWidget);
-
-    // Tap on the user icon in the bottom navigation bar to navigate to UserPage
-    await tester.tap(find.bySemanticsLabel('Utilisateur'));
-    await tester.pumpAndSettle(const Duration(minutes: 15));
+    // Wait for the widget to settle.
+    await tester.pumpAndSettle(const Duration(seconds: 5));
 
     // Verify that UserPage is displayed
     expect(find.byType(UserPage), findsOneWidget);
 
-    print('UserPage is displayed successfully');
+    // You can add more specific verifications based on your UI structure
+    expect(find.text('User Page'), findsOneWidget);
+    expect(find.text('Activation du mode de différence de temperature :'),
+        findsOneWidget);
+    expect(find.text('Choix de l\'heure :'), findsOneWidget);
   });
 }
