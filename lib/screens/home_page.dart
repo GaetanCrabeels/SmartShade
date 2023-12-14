@@ -324,6 +324,15 @@ class _HomePageState extends State<HomePage> {
                         child: const Text('Fermer',
                             style:
                                 TextStyle(fontSize: 20, color: Colors.white))),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
                     if (_showAdvancedOptions)
                       ElevatedButton(
                         child: Text('Programmation Automatique'),
@@ -341,9 +350,7 @@ class _HomePageState extends State<HomePage> {
                         child: Text('Conseils Écologiques et Bien-être'),
                         onPressed: () {/* Code pour conseils écologiques */},
                       ),
-                  ],
-                ),
-              ),
+                  ])),
 
               const Divider(
                 height: 32,
