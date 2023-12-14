@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/widgets/reusable.dart';
-import 'package:flutter_application_1/screens/home_page.dart';
 import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
+import 'package:flutter_application_1/utils/password_utils.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -17,6 +17,8 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController _passwordTextController = TextEditingController();
   final TextEditingController _emailTextController = TextEditingController();
   final TextEditingController _userNameTextController = TextEditingController();
+
+  String? _houseId;
 
   @override
   Widget build(BuildContext context) {
@@ -52,20 +54,39 @@ class _SignUpState extends State<SignUp> {
             ),
             signInsignUpButton(context, false, () async {
               try {
+                final salt = generateSalt();
+                final hashedPassword =
+                    await hashPassword(_passwordTextController.text, salt);
                 UserCredential userCredential =
                     await FirebaseAuth.instance.createUserWithEmailAndPassword(
                   email: _emailTextController.text,
-                  password: _passwordTextController.text,
+                  password: hashedPassword,
                 );
 
                 final db = FirebaseFirestore.instance;
                 final localContext = context; // Capturer le contexte localement
 
+                DocumentReference houseRef = await db.collection("houses").add({
+                  'house_name': 'My House',
+                  'house_temperature': 20,
+                  'shutter_temperature_delta_bool': false,
+                  'shutter_temperature_delta': 2,
+                  'shutter_hour_bool': false,
+                  'shutter_hour_open': 08.00,
+                  'shutter_hour_close': 20.00,
+                });
+
+                setState(() {
+                  _houseId = houseRef.id;
+                });
+
                 db.collection("users").doc(userCredential.user?.uid).set({
                   'fullName': _userNameTextController.text,
                   'email': _emailTextController.text,
-                  'accountCreated': Timestamp.now(),
-                  'Password': _passwordTextController.text,
+                  'accountCreated': FieldValue.serverTimestamp(),
+                  'Password': hashedPassword,
+                  'salt': salt,
+                  'houseId': _houseId,
                 }).onError((e, _) {
                   if (kDebugMode) {
                     print("Error writing document: $e");
@@ -86,9 +107,9 @@ class _SignUpState extends State<SignUp> {
                   MaterialPageRoute(
                       builder: (context) => const BottomNavigationBarWidget()),
                 );
-              } on FirebaseAuthException catch (e) {
+              } on FirebaseAuthException {
                 if (kDebugMode) {
-                  print("Error creating account: $e");
+                  print("Error creating account");
                 }
                 // Gérer les erreurs d'authentification ici
               }

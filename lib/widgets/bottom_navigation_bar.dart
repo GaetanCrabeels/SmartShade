@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import '../screens/home_page.dart';
 import '../screens/shutter_list.dart';
 import '../screens/parameters.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../screens/user_page.dart';
+import '../screens/graphics.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
-  const BottomNavigationBarWidget({Key? key}) : super(key: key);
+  const BottomNavigationBarWidget({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -18,31 +22,21 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   static final List<Widget> _widgetOptions = <Widget>[
     //Liste des pages
     const HomePage(),
-    const Text('Index 2: Utilisateur'),
     const ShutterList(
       houseId: 'house_id_1',
     ),
-    // const UserPage(
-    //   user_name: '',
-    // ),
-    const Parameters(),
+    UserPage(
+      user_name: '',
+      firestore: FirebaseFirestore.instance,
+    ),
+    const UserProfilePage(),
+    const Graphics(),
   ];
 
 //Selection de la page
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      if (_selectedIndex == 0) {
-        _widgetOptions[0] = const HomePage();
-      } else if (_selectedIndex == 1) {
-        _widgetOptions[1] = const ShutterList(
-          houseId: 'house_id_1',
-        );
-      } else if (_selectedIndex == 2) {
-        _widgetOptions[2] = const Text('Index 2: Utilisateur');
-      } else if (_selectedIndex == 3) {
-        _widgetOptions[3] = const Parameters();
-      }
     });
   }
 
@@ -74,6 +68,11 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
             icon: Icon(Icons.settings),
             label: 'Parametres',
             backgroundColor: Colors.pink,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.auto_graph_rounded),
+            label: 'Graphique',
+            backgroundColor: Colors.red,
           ),
         ],
         currentIndex: _selectedIndex,

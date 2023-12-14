@@ -1,21 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ShutterListPage extends StatefulWidget {
-  const ShutterListPage({Key? key}) : super(key: key);
+class ShutterListPage extends StatelessWidget {
+  const ShutterListPage({super.key});
 
-  @override
-  _ShutterListPageState createState() => _ShutterListPageState();
-}
-
-class _ShutterListPageState extends State<ShutterListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shutters Linked to House 1'),
       ),
-      body: ShutterList(houseId: 'house_id_1'),
+      body: const ShutterList(houseId: 'house_id_1'),
     );
   }
 }
@@ -23,7 +18,7 @@ class _ShutterListPageState extends State<ShutterListPage> {
 class ShutterList extends StatelessWidget {
   final String houseId;
 
-  const ShutterList({Key? key, required this.houseId}) : super(key: key);
+  const ShutterList({super.key, required this.houseId});
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +48,7 @@ class ShutterList extends StatelessWidget {
             children: snapshot.data!.docs.map((DocumentSnapshot document) {
               Map<String, dynamic>? shutterData =
                   document.data() as Map<String, dynamic>?;
-              String shutterName = shutterData?['shutter_name'] ?? '';
+              String shutterName = shutterData?['shutter_name'];
 
               return ElevatedButton(
                 onPressed: () {
@@ -65,13 +60,6 @@ class ShutterList extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
-        backgroundColor: Colors.blue,
-        label: const Text('Ajout d\'un volet'),
-        icon: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
