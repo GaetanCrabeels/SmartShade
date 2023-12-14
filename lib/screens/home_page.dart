@@ -223,23 +223,41 @@ class _HomePageState extends State<HomePage> {
       children: [
         Scaffold(
           appBar: AppBar(title: const Text('Accueil'), actions: <Widget>[
-            Switch(
-                value: _showAdvancedOptions,
-                onChanged: (bool value) {
-                  setState(() {
-                    _showAdvancedOptions = value;
-                  });
-                })
+            Row(
+              mainAxisSize: MainAxisSize
+                  .min, // Use this to prevent the Row from expanding to the full width
+              children: [
+                Text('Avancé'),
+                Switch(
+                  value: _showAdvancedOptions,
+                  onChanged: (bool value) {
+                    setState(() {
+                      _showAdvancedOptions = value;
+                    });
+                  },
+                  activeColor: Colors.red, // Color when the switch is on
+                  // inactiveTrackColor:
+                  //     Colors.blue, // Color of the track when the switch is off
+                )
+              ],
+            )
           ]),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 16),
               const Text(
-                'Bonjour',
+                'SmartShade',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Text(
+                'Where Inteligence Meets Shade',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
               const SizedBox(height: 16),
