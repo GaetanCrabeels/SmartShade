@@ -24,6 +24,10 @@ class _UserPageState extends State<UserPage> {
   late double _hourClosing = 0;
   late String printHourOpening = '';
   late String printHourClosing = '';
+  late bool useLightMode = false;
+  late String selectedLightLevel = 'morning';
+  late double lightThreshold;
+  late double externalLightValue; // Nouvelle variable pour la luminosité externe
 
   CollectionReference houses = FirebaseFirestore.instance.collection('houses');
 
@@ -54,23 +58,38 @@ class _UserPageState extends State<UserPage> {
               setState(() {
                 _degreeDiff = houseSnapshot['shutter_temperature_delta'];
                 useTemperatureDelta =
-                    houseSnapshot['shutter_temperature_delta_bool'];
+                houseSnapshot['shutter_temperature_delta_bool'];
                 useHour = houseSnapshot['shutter_hour_bool'];
                 _hourOpening = houseSnapshot['shutter_hour_open'];
                 _hourClosing = houseSnapshot['shutter_hour_close'];
 
                 printHourOpening = convertToHourMinute(_hourOpening);
                 printHourClosing = convertToHourMinute(_hourClosing);
+
+                useLightMode = houseSnapshot['use_light_mode'] ?? false;
+                selectedLightLevel =
+                    houseSnapshot['selected_light_level'] ?? 'morning';
+                lightThreshold = houseSnapshot['light_threshold'] ?? 0.0;
               });
             } else {
               if (kDebugMode) {
-                print('Document does not exist on the database');
+                print('Document does not exist in the database');
               }
             }
           });
         });
       }
     });
+
+    // Appel à la fonction pour récupérer la luminosité externe
+    getExternalLightData();
+  }
+
+  // Fonction pour récupérer la luminosité externe depuis l'Arduino
+  void getExternalLightData() {
+    // Vous devez implémenter la logique pour récupérer la luminosité externe de l'Arduino ici
+    // Utilisez une communication appropriée entre le Flutter et l'Arduino (par exemple, Bluetooth, Wi-Fi)
+    // Mettez à jour la variable externalLightValue en conséquence
   }
 
   @override
@@ -81,8 +100,7 @@ class _UserPageState extends State<UserPage> {
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: houses.doc(_houseId).get(),
-        builder:
-            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {}
 
           if (snapshot.hasError) {
@@ -98,7 +116,7 @@ class _UserPageState extends State<UserPage> {
           return Column(
             children: [
               buildSwitchCard(
-                title: 'Activation du mode de différence de temperature : ',
+                title: 'Activation du mode de différence de température : ',
                 value: useTemperatureDelta,
                 onChanged: (value) {
                   _updateTemperatureDelta(value);
@@ -109,6 +127,13 @@ class _UserPageState extends State<UserPage> {
                 value: useHour,
                 onChanged: (value) {
                   _updateHour(value);
+                },
+              ),
+              buildSwitchCard(
+                title: 'Activation du mode de luminosité : ',
+                value: useLightMode,
+                onChanged: (value) {
+                  _updateLightMode(value);
                 },
               ),
               if (useTemperatureDelta)
@@ -139,6 +164,12 @@ class _UserPageState extends State<UserPage> {
                   title: 'Heure de fermeture des volets : ',
                   onPressed: () => _selectTime(context, false),
                   content: Text(printHourClosing),
+                ),
+              if (useLightMode)
+                buildLightLevelSelectionCard(
+                  title: 'Choix du niveau de luminosité : ',
+                  onPressed: () => _selectLightLevel(context),
+                  content: Text(selectedLightLevel),
                 ),
             ],
           );
@@ -200,6 +231,29 @@ class _UserPageState extends State<UserPage> {
   }
 
   Widget buildTimeSelectionCard({
+    required String title,
+    required VoidCallback onPressed,
+    required Widget content,
+  }) {
+    return buildCard(
+      title: title,
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(120, 48),
+            ),
+            child: content,
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget buildLightLevelSelectionCard({
     required String title,
     required VoidCallback onPressed,
     required Widget content,
@@ -311,21 +365,21 @@ class _UserPageState extends State<UserPage> {
       houses
           .doc(_houseId)
           .update({
-            'shutter_temperature_delta_bool': value,
-            'shutter_hour_bool': false,
-          })
+        'shutter_temperature_delta_bool': value,
+        'shutter_hour_bool': false,
+      })
           .then((_) {})
           .catchError((error) {
-            if (kDebugMode) {
-              print('Error updating document: $error');
-            }
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Error updating document'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          });
+        if (kDebugMode) {
+          print('Error updating document: $error');
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error updating document'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      });
     });
   }
 
@@ -366,6 +420,81 @@ class _UserPageState extends State<UserPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Value updated successfully'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }).catchError((error) {
+        if (kDebugMode) {
+          print('Error updating document: $error');
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error updating document'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      });
+    });
+  }
+
+  void _updateLightMode(bool value) {
+    setState(() {
+      useLightMode = value;
+
+      houses.doc(_houseId).update({
+        'use_light_mode': value,
+      }).then((_) {}).catchError((error) {
+        if (kDebugMode) {
+          print('Error updating document: $error');
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error updating document'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      });
+    });
+  }
+
+  void _selectLightLevel(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select Light Level'),
+          content: Column(
+            children: [
+              ElevatedButton(
+                onPressed: () => _updateSelectedLightLevel('morning'),
+                child: Text('Morning'),
+              ),
+              ElevatedButton(
+                onPressed: () => _updateSelectedLightLevel('evening'),
+                child: Text('Evening'),
+              ),
+              ElevatedButton(
+                onPressed: () => _updateSelectedLightLevel('night'),
+                child: Text('Night'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _updateSelectedLightLevel(String level) {
+    setState(() {
+      selectedLightLevel = level;
+
+      houses.doc(_houseId).update({
+        'selected_light_level': level,
+      }).then((_) {
+        Navigator.pop(context); // Close the dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Light level updated successfully'),
             duration: Duration(seconds: 2),
           ),
         );
