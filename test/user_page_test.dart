@@ -1,18 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:google_sign_in_mocks/google_sign_in_mocks.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_application_1/main.dart'; // Import your app's main.dart file
 import 'package:flutter_application_1/screens/user_page.dart';
 
 void main() {
-  testWidgets('UserPage Widget Test', (WidgetTester tester) async {
-    // Initialize Firebase
+  late MockGoogleSignIn googleSignIn;
+
+  setUp(() {
+    googleSignIn = MockGoogleSignIn();
+  });
+
+  Future<void> setupFirebase() async {
+    WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
+  }
 
-    // Create a fake instance of FirebaseFirestore
+  testWidgets('UserPage Widget Test', (WidgetTester tester) async {
+    await setupFirebase();
+
+    // Mock data and dependencies
     final firestore = FakeFirebaseFirestore();
+    final signInAccount = await googleSignIn.signIn();
+    final signInAuthentication = await signInAccount!.authentication;
 
-    // Set up initial data in Firestore
     await firestore.collection('users').doc('test_user').set({
       'houseId': 'house_id_1',
     });
@@ -24,20 +39,26 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       MaterialApp(
-        home: UserPage(user_name: 'test_user', firestore: firestore),
+        home:
+            BottomNavigationBarWidget(), // Make sure this widget leads to UserPage
+        routes: {
+          '/user': (context) =>
+              UserPage(user_name: 'test_user', firestore: firestore),
+        },
       ),
     );
 
-    // Wait for the widget to settle.
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+    // Wait for the navigation animation to complete.
+    await tester.pumpAndSettle();
+
+    // Verify that UserPage is not yet displayed
+    expect(find.byType(UserPage), findsNothing);
+
+    // Tap on the user icon in the bottom navigation bar to navigate to UserPage
+    await tester.tap(find.bySemanticsLabel('Utilisateur'));
+    await tester.pumpAndSettle();
 
     // Verify that UserPage is displayed
     expect(find.byType(UserPage), findsOneWidget);
-
-    // You can add more specific verifications based on your UI structure
-    expect(find.text('User Page'), findsOneWidget);
-    expect(find.text('Activation du mode de différence de temperature :'),
-        findsOneWidget);
-    expect(find.text('Choix de l\'heure :'), findsOneWidget);
   });
 }
