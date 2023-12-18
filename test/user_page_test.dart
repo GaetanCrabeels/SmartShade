@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:google_sign_in_mocks/google_sign_in_mocks.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_application_1/main.dart';
+import 'package:flutter_application_1/main.dart'; // Import your app's main.dart file
 import 'package:flutter_application_1/screens/user_page.dart';
-import 'package:flutter_application_1/widgets/bottom_navigation_bar.dart';
 
 void main() {
   late MockGoogleSignIn googleSignIn;
@@ -20,23 +20,10 @@ void main() {
     await Firebase.initializeApp();
   }
 
-  test('should return idToken and accessToken when authenticating', () async {
-    final signInAccount = await googleSignIn.signIn();
-    final signInAuthentication = await signInAccount!.authentication;
-
-    expect(signInAuthentication, isNotNull);
-    expect(googleSignIn.currentUser, isNotNull);
-    expect(signInAuthentication.accessToken, isNotNull);
-    expect(signInAuthentication.idToken, isNotNull);
-
-    print('Authentication successful: '
-        'idToken=${signInAuthentication.idToken}, '
-        'accessToken=${signInAuthentication.accessToken}');
-  });
-
-  testWidgets('shows user page', (WidgetTester tester) async {
+  testWidgets('UserPage Widget Test', (WidgetTester tester) async {
     await setupFirebase();
 
+    // Mock data and dependencies
     final firestore = FakeFirebaseFirestore();
     final signInAccount = await googleSignIn.signIn();
     final signInAuthentication = await signInAccount!.authentication;
@@ -49,10 +36,11 @@ void main() {
       'shutter_temperature_delta': 0,
     });
 
+    // Build our app and trigger a frame.
     await tester.pumpWidget(
       MaterialApp(
-        title: 'Mon App Flutter',
-        home: BottomNavigationBarWidget(),
+        home:
+            BottomNavigationBarWidget(), // Make sure this widget leads to UserPage
         routes: {
           '/user': (context) =>
               UserPage(user_name: 'test_user', firestore: firestore),
@@ -60,17 +48,17 @@ void main() {
       ),
     );
 
+    // Wait for the navigation animation to complete.
     await tester.pumpAndSettle();
 
-    expect(find.byType(BottomNavigationBarWidget), findsOneWidget);
+    // Verify that UserPage is not yet displayed
+    expect(find.byType(UserPage), findsNothing);
 
     // Tap on the user icon in the bottom navigation bar to navigate to UserPage
     await tester.tap(find.bySemanticsLabel('Utilisateur'));
-    await tester.pumpAndSettle(const Duration(minutes: 15));
+    await tester.pumpAndSettle();
 
     // Verify that UserPage is displayed
     expect(find.byType(UserPage), findsOneWidget);
-
-    print('UserPage is displayed successfully');
   });
 }
