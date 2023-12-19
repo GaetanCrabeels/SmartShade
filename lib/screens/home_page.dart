@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -70,7 +70,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   //Shutter state update function (open/close) in the database
-  void _setShutterState(String houseId, bool open) async {
+  void _setShuttersState(String houseId, bool open) async {
     try {
       QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
           .instance
@@ -89,13 +89,35 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-// Usage:
-  void _setShutterOpen(String houseId) async {
-    _setShutterState(houseId, true);
+  void _setOneShutterState(String shutterId, bool open) async {
+    try {
+      DocumentSnapshot<Map<String, dynamic>> doc = await FirebaseFirestore
+          .instance
+          .collection('shutters')
+          .doc(shutterId)
+          .get();
+
+      if (doc.exists) {
+        doc.reference.update({'shutter_open': open});
+      } else {
+        if (kDebugMode) {
+          print('Shutter document not found for id: $shutterId');
+        }
+      }
+    } catch (error) {
+      if (kDebugMode) {
+        print('Error setting shutter state: $error');
+      }
+    }
   }
 
-  void _setShutterClose(String houseId) async {
-    _setShutterState(houseId, false);
+// Usage:
+  void _setShuttersOpen(String houseId) async {
+    _setShuttersState(houseId, true);
+  }
+
+  void _setShuttersClose(String houseId) async {
+    _setShuttersState(houseId, false);
   }
 
   // function to get the shutter id from the database
@@ -131,6 +153,7 @@ class _HomePageState extends State<HomePage> {
         return {
           'shutter_name': shutter['shutter_name'] ?? 'N/A',
           'shutter_open': shutter['shutter_open'] ?? false,
+          'shutter_id': shutter.id,
         };
       }).toList();
 
@@ -238,7 +261,7 @@ class _HomePageState extends State<HomePage> {
                     ElevatedButton(
                       onPressed: () {
                         _toggleLoading();
-                        _setShutterState(_houseId, true);
+                        _setShuttersState(_houseId, true);
                         Future.delayed(const Duration(seconds: 2), () {
                           _toggleLoading();
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -268,7 +291,7 @@ class _HomePageState extends State<HomePage> {
                     ElevatedButton(
                         onPressed: () {
                           _toggleLoading();
-                          _setShutterState(_houseId, false);
+                          _setShuttersState(_houseId, false);
                           Future.delayed(const Duration(seconds: 2), () {
                             _toggleLoading();
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -316,6 +339,7 @@ class _HomePageState extends State<HomePage> {
                     return buildShutterCard(
                       shutter['shutter_name'],
                       shutter['shutter_open'],
+                      shutter['shutter_id'],
                     );
                   }).toList(),
                 ),
@@ -365,7 +389,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildShutterCard(String shutterName, bool isOpen) {
+  Widget buildShutterCard(String shutterName, bool isOpen, String shutterId) {
     Color cardColor = isOpen ? Colors.green : Colors.red;
 
     return Card(
@@ -388,6 +412,42 @@ class _HomePageState extends State<HomePage> {
               Text(
                 isOpen ? 'Ouvert' : 'Fermé',
                 style: const TextStyle(fontSize: 14, color: Colors.white),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _toggleLoading();
+                  isOpen
+                      ? _setOneShutterState(shutterId, false)
+                      : _setOneShutterState(shutterId, true);
+                  Future.delayed(const Duration(seconds: 2), () {
+                    _toggleLoading();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isOpen
+                              ? 'Fermeture du volet terminée'
+                              : 'Ouverture du volet terminée',
+                        ),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    fetchShutterInfo(_houseId).then((shutterInfoList) {
+                      setState(() {
+                        shutterList = shutterInfoList;
+                      });
+                    });
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cardColor, // Match the card color
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: Text(
+                  isOpen ? 'Fermer' : 'Ouvrir',
+                  style: TextStyle(fontSize: 14, color: Colors.white),
+                ),
               ),
             ],
           ),

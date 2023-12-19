@@ -23,7 +23,6 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     //Liste des pages
     const HomePage(),
     const ShutterList(
-      houseId: 'house_id_1',
     ),
     UserPage(
       user_name: '',
