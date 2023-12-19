@@ -67,7 +67,7 @@ void main() {
         .doc('etat')
         .set({'valeur': 1});
 
-    // Crée une instance de FermetureTempoScreen
+    // crée une instance de FermetureTempoScreen
     final fermetureTempoScreen = FermetureTempoScreen();
 
     await fermetureTempoScreen.sendCommand(0);
@@ -75,9 +75,16 @@ void main() {
     final querySnapshot =
         await firestore.collection('commandeCapteurs').doc('etat').get();
 
-    // Vérifie si valeur mis à jour
+    // vérifie si valeur mis à jour
     expect(querySnapshot.exists, true);
     expect(querySnapshot['valeur'], 0);
     print('Captor desactivate');
+
+    await fermetureTempoScreen.sendCommand(1);
+
+    // vérifie si valeur mis à jour
+    expect(querySnapshot.exists, true);
+    expect(querySnapshot['valeur'], 1);
+    print('Captor activate');
   });
 }
