@@ -3,6 +3,7 @@ import '../screens/home_page.dart';
 import '../screens/shutter_list.dart';
 import '../screens/parameters.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 
 import '../screens/user_page.dart';
 import '../screens/graphics.dart';
@@ -15,11 +16,10 @@ class BottomNavigationBarWidget extends StatefulWidget {
   _BottomNavigationBarWidgetState createState() =>
       _BottomNavigationBarWidgetState();
 }
-
 class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
   int _selectedIndex = 0;
+    static final List<Widget> _widgetOptions = <Widget>[
 
-  static final List<Widget> _widgetOptions = <Widget>[
     //Liste des pages
     const HomePage(),
     const ShutterList(
@@ -30,8 +30,17 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
       firestore: FirebaseFirestore.instance,
     ),
     const UserProfilePage(),
-    const Graphics(),
+    Graphics(weatherData:weatherData, client: httpClient),
   ];
+
+  static get weatherData => WeatherData(
+    mtime: '10:00',
+    tsa: 25.0,
+    hra: 50.0,
+    plu: 0.0,
+    vvt: 5.0,
+  );
+  static get httpClient => http.Client();
 
 //Selection de la page
   void _onItemTapped(int index) {

@@ -1,13 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 
+
 class Graphics extends StatefulWidget {
-  const Graphics({super.key});
+  final WeatherData weatherData;
+  final http.Client client;
+  const Graphics({super.key, required this.weatherData, required this.client});
 
   @override
-  _GraphicsState createState() => _GraphicsState();
+  GraphicsState createState() => GraphicsState();
 }
 
 class WeatherData {
@@ -26,11 +30,12 @@ class WeatherData {
   });
 }
 
-class _GraphicsState extends State<Graphics> {
+class GraphicsState extends State<Graphics> {
   String weatherDataText = 'Cliquez sur le bouton pour mettre à jour les données';
   String? selectedStation;
   List<Map<String, String>> sidToPoste = [];
   bool useLocation = false;
+  Geolocator geolocator = Geolocator();
 
   static const apiUrl =
       'https://agromet.be/fr/agromet/api/v3/get_pameseb_hourly_prev/tsa,plu,hra,ens,vvt';
@@ -43,16 +48,16 @@ class _GraphicsState extends State<Graphics> {
   @override
   void initState() {
     super.initState();
-    _fetchSidToPoste(); // Chargez la liste des stations au démarrage
+    fetchSidToPoste(); // Chargez la liste des stations au démarrage
   }
 
-  Future<void> _fetchSidToPoste() async {
+  Future<void> fetchSidToPoste() async {
     if (_isDataLoaded) {
       return; // Évitez de recharger les données
     }
 
     if (useLocation) {
-      await _getCurrentLocation();
+      await getCurrentLocation();
     }
 
     final url = Uri.parse('$apiUrl/all/1');
@@ -67,7 +72,7 @@ class _GraphicsState extends State<Graphics> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseJson = jsonDecode(response.body);
-        sidToPoste = _extractSidToPoste(responseJson['references']['stations']);
+        sidToPoste = extractSidToPoste(responseJson['references']['stations']);
         sidToPoste.insert(0, {
           'SID': '0',
           'Poste': 'Veuillez choisir une station',
@@ -78,8 +83,8 @@ class _GraphicsState extends State<Graphics> {
         setState(() {});
       }
     } catch (exception) {
-      // Gérez l'erreur de requête ici
-      // Par exemple, weatherDataText = 'Erreur lors de la requête API : $exception';
+
+      weatherDataText = 'Erreur lors de la requête API : $exception';
     }
     // Assurez-vous que le widget est mis à jour
     if (mounted) {
@@ -87,7 +92,7 @@ class _GraphicsState extends State<Graphics> {
     }
   }
 
-  List<Map<String, String>> _extractSidToPoste(List<dynamic> stations) {
+  List<Map<String, String>> extractSidToPoste(List<dynamic> stations) {
     final List<Map<String, String>> result = [];
 
     for (final station in stations) {
@@ -109,7 +114,7 @@ class _GraphicsState extends State<Graphics> {
     return result;
   }
 
-  Future<void> _getCurrentLocation() async {
+  Future<void> getCurrentLocation() async {
     Position position =
     await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
 
@@ -144,7 +149,7 @@ class _GraphicsState extends State<Graphics> {
     }
   }
 
-  Future<void> _fetchDataForSelectedStation() async {
+  Future<void> fetchDataForSelectedStation() async {
     if (selectedStation == null) {
       return;
     }
@@ -167,7 +172,9 @@ class _GraphicsState extends State<Graphics> {
 
           for (final result in results) {
             final mtime = result['mtime'];
-            print(mtime);
+            if (kDebugMode) {
+              print(mtime);
+            }
             final tsa = double.tryParse(result['tsa']);
             final hra = double.tryParse(result['hra']);
             final plu = double.tryParse(result['plu']);
@@ -213,9 +220,7 @@ class _GraphicsState extends State<Graphics> {
         });
       }
     } catch (exception) {
-      setState(() {
-        weatherDataText = 'Erreur lors de la requête API : $exception';
-      });
+      weatherDataText = 'Erreur lors de la requête API : $exception';
     }
   }
 
@@ -237,13 +242,13 @@ class _GraphicsState extends State<Graphics> {
                   setState(() {
                     useLocation = value;
                     if (value) {
-                      _getCurrentLocation(); // Appeler _getCurrentLocation lorsque useLocation est vrai
+                      getCurrentLocation(); // Appeler _getCurrentLocation lorsque useLocation est vrai
                     }
                   });
                 },
               ),
               FutureBuilder<void>(
-                future: _fetchSidToPoste(),
+                future: fetchSidToPoste(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     return DropdownButton<String>(
@@ -268,7 +273,7 @@ class _GraphicsState extends State<Graphics> {
               const SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: () {
-                  _fetchDataForSelectedStation();
+                  fetchDataForSelectedStation();
                 },
                 child: const Text('Mettre à jour les données'),
               ),

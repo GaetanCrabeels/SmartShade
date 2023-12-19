@@ -36,10 +36,12 @@ dependencies:
   firebase_core_platform_interface: 5.0.0
   provider: ^5.0.0
   flutter_bloc: ^7.0.1
-
+  http_mock_adapter: ^0.6.1
+  dio: ^5.4.0
   geolocator: ^7.7.0
+  http: ^0.13.6
+  mockito: ^5.4.3
 
-  http: ^0.13.3
   fl_chart: ^0.40.0
 
   # The following adds the Cupertino Icons font to your application.
@@ -53,6 +55,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  mockito: ^5.4.3
+  http: ^0.13.0
+
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
