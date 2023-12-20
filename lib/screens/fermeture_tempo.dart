@@ -5,7 +5,7 @@ class FermetureTempoScreen extends StatelessWidget {
   const FermetureTempoScreen({Key? key}) : super(key: key);
 
 //Methode asynchrone qui envoie commande a firestore
-  Future<void> sendCommand(String command) async {
+  Future<void> sendCommand(int command) async {
     try {
       await FirebaseFirestore.instance
           .collection('commandeCapteurs')
@@ -30,13 +30,13 @@ class FermetureTempoScreen extends StatelessWidget {
           children: <Widget>[
             ElevatedButton(
               onPressed: () {
-                sendCommand('1');
+                sendCommand(1);
               },
               child: const Text('Activer les capteurs de luminosité'),
             ),
             ElevatedButton(
               onPressed: () {
-                sendCommand('0');
+                sendCommand(0);
               },
               child: const Text('Désactiver les capteurs de luminosité'),
             ),
