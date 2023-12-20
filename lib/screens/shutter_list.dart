@@ -666,13 +666,13 @@ void _updateRoomOpenInDatabase(Room room) {
     rooms.add(newRoom);
   });
 
-  // Ajouter la nouvelle pièce à Firestore
+  // Ajouter la nouvelle pièce à la db
   roomCollection.add({
     'room_name': newRoom.name,
     'shutters_open': newRoom.isOn,
     'houseId': _houseId,
   }).then((DocumentReference docRef) {
-    // Utilisez l'ID généré par Firebase pour mettre à jour la pièce localement
+   
     setState(() {
       final updatedRoom = Room(id: docRef.id, name: name, shutters: []);
       rooms[rooms.indexOf(newRoom)] = updatedRoom;
