@@ -5,7 +5,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:google_sign_in_mocks/google_sign_in_mocks.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_application_1/main.dart'; // Import your app's main.dart file
+import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/screens/user_page.dart';
 
 void main() {
@@ -39,8 +39,7 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       MaterialApp(
-        home:
-            BottomNavigationBarWidget(), // Make sure this widget leads to UserPage
+        home: BottomNavigationBarWidget(),
         routes: {
           '/user': (context) =>
               UserPage(user_name: 'test_user', firestore: firestore),

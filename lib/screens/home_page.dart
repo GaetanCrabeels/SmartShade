@@ -270,6 +270,11 @@ class _HomePageState extends State<HomePage> {
                               duration: Duration(seconds: 2),
                             ),
                           );
+                          getOpenedShuttersCount(_houseId).then((count) {
+                            setState(() {
+                              numberOfOpenedShutters = count;
+                            });
+                          });
                           fetchShutterInfo(_houseId).then((shutterInfoList) {
                             setState(() {
                               shutterList = shutterInfoList;
@@ -300,6 +305,11 @@ class _HomePageState extends State<HomePage> {
                                 duration: Duration(seconds: 2),
                               ),
                             );
+                            getOpenedShuttersCount(_houseId).then((count) {
+                              setState(() {
+                                numberOfOpenedShutters = count;
+                              });
+                            });
                             fetchShutterInfo(_houseId).then((shutterInfoList) {
                               setState(() {
                                 shutterList = shutterInfoList;
@@ -431,6 +441,11 @@ class _HomePageState extends State<HomePage> {
                         duration: Duration(seconds: 2),
                       ),
                     );
+                    getOpenedShuttersCount(_houseId).then((count) {
+                      setState(() {
+                        numberOfOpenedShutters = count;
+                      });
+                    });
                     fetchShutterInfo(_houseId).then((shutterInfoList) {
                       setState(() {
                         shutterList = shutterInfoList;
