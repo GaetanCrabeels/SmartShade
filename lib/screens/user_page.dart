@@ -92,17 +92,30 @@ class _UserPageState extends State<UserPage> {
     Timer.periodic(Duration(seconds: 30), (Timer t) => getExternalLightData());
   }
 
-  // Fonction pour récupérer la luminosité externe depuis l'Arduino
+    // Fonction pour récupérer la luminosité externe depuis Firebase
   void getExternalLightData() {
-    // Vous devez implémenter la logique pour récupérer la luminosité externe de l'Arduino ici
-    // Utilisez une communication appropriée entre le Flutter et l'Arduino (par exemple, Bluetooth, Wi-Fi)
-    // Mettez à jour la variable externalLightValue en conséquence
+    FirebaseFirestore.instance
+        .collection('sensor_data')
+        .doc('light_sensor')
+        .get()
+        .then((DocumentSnapshot sensorSnapshot) {
+      if (sensorSnapshot.exists) {
+        setState(() {
+          externalLightValue = sensorSnapshot['ldr_value'];
+        });
+      }
+    }).catchError((error) {
+      if (kDebugMode) {
+        print('Error getting sensor data: $error');
+      }
+    });
   }
 
   void checkLightAndAct() {
-    /*if (useLightMode && externalLightValue < lightThreshold) {
-      setShutterState(shutterId, false); // Ferme les volets
-    }*/
+    if (useLightMode && externalLightValue < lightThreshold) {
+      // Appeler la fonction pour fermer tous les volets
+      //_setShuttersClose(_houseId);
+    }
   }
 
   @override
