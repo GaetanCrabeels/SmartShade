@@ -18,6 +18,8 @@ const char *USER_PASSWORD = "pongo1962";
 #define HOUSE_ID "house_id_1"
 String documentPath = "shutters/"+String(SHUTTER_ID);
 String documentPathDelta = "houses/"+String(HOUSE_ID);
+const int lightThreshold = 500;  // Valeur seuil pour déclencher une action (ajustez selon vos besoins)
+
 
 FirebaseData fbdo;
 FirebaseAuth auth;
