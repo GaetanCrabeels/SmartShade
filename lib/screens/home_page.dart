@@ -270,6 +270,11 @@ class _HomePageState extends State<HomePage> {
                               duration: Duration(seconds: 2),
                             ),
                           );
+                          getOpenedShuttersCount(_houseId).then((count) {
+                            setState(() {
+                              numberOfOpenedShutters = count;
+                            });
+                          });
                           fetchShutterInfo(_houseId).then((shutterInfoList) {
                             setState(() {
                               shutterList = shutterInfoList;
@@ -300,6 +305,11 @@ class _HomePageState extends State<HomePage> {
                                 duration: Duration(seconds: 2),
                               ),
                             );
+                            getOpenedShuttersCount(_houseId).then((count) {
+                              setState(() {
+                                numberOfOpenedShutters = count;
+                              });
+                            });
                             fetchShutterInfo(_houseId).then((shutterInfoList) {
                               setState(() {
                                 shutterList = shutterInfoList;
@@ -332,18 +342,20 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               // Display the shutters
-              SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                  children: shutterList.map((shutter) {
-                    return buildShutterCard(
-                      shutter['shutter_name'],
-                      shutter['shutter_open'],
-                      shutter['shutter_id'],
-                    );
-                  }).toList(),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: Column(
+                    children: shutterList.map((shutter) {
+                      return buildShutterCard(
+                        shutter['shutter_name'],
+                        shutter['shutter_open'],
+                        shutter['shutter_id'],
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
+              )
             ],
           ),
         ),
@@ -431,6 +443,11 @@ class _HomePageState extends State<HomePage> {
                         duration: Duration(seconds: 2),
                       ),
                     );
+                    getOpenedShuttersCount(_houseId).then((count) {
+                      setState(() {
+                        numberOfOpenedShutters = count;
+                      });
+                    });
                     fetchShutterInfo(_houseId).then((shutterInfoList) {
                       setState(() {
                         shutterList = shutterInfoList;
