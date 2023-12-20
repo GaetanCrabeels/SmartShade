@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'home_page.dart';
+import 'dart:async';
 
 class UserPage extends StatefulWidget {
   final String user_name;
@@ -25,9 +27,14 @@ class _UserPageState extends State<UserPage> {
   late String printHourOpening = '';
   late String printHourClosing = '';
   late bool useLightMode = false;
-  late String selectedLightLevel = 'morning';
+  late String selectedLightLevel = 'Matin';
   late double lightThreshold;
   late double externalLightValue; // Nouvelle variable pour la luminosité externe
+  final Map<String, double> lightLevels = {
+    'Matin': 5000.0,
+    'Soir': 150.0,
+    'Nuit': 15.0,
+  };
 
   CollectionReference houses = FirebaseFirestore.instance.collection('houses');
 
@@ -68,7 +75,7 @@ class _UserPageState extends State<UserPage> {
 
                 useLightMode = houseSnapshot['use_light_mode'] ?? false;
                 selectedLightLevel =
-                    houseSnapshot['selected_light_level'] ?? 'morning';
+                    houseSnapshot['selected_light_level'] ?? 'Matin';
                 lightThreshold = houseSnapshot['light_threshold'] ?? 0.0;
               });
             } else {
@@ -82,7 +89,7 @@ class _UserPageState extends State<UserPage> {
     });
 
     // Appel à la fonction pour récupérer la luminosité externe
-    getExternalLightData();
+    Timer.periodic(Duration(seconds: 30), (Timer t) => getExternalLightData());
   }
 
   // Fonction pour récupérer la luminosité externe depuis l'Arduino
@@ -90,6 +97,12 @@ class _UserPageState extends State<UserPage> {
     // Vous devez implémenter la logique pour récupérer la luminosité externe de l'Arduino ici
     // Utilisez une communication appropriée entre le Flutter et l'Arduino (par exemple, Bluetooth, Wi-Fi)
     // Mettez à jour la variable externalLightValue en conséquence
+  }
+
+  void checkLightAndAct() {
+    /*if (useLightMode && externalLightValue < lightThreshold) {
+      setShutterState(shutterId, false); // Ferme les volets
+    }*/
   }
 
   @override
@@ -462,20 +475,20 @@ class _UserPageState extends State<UserPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Select Light Level'),
+          title: Text('Selectionnez un moment de la journée'),
           content: Column(
             children: [
               ElevatedButton(
-                onPressed: () => _updateSelectedLightLevel('morning'),
-                child: Text('Morning'),
+                onPressed: () => _updateSelectedLightLevel('Matin'),
+                child: Text('Matin'),
               ),
               ElevatedButton(
-                onPressed: () => _updateSelectedLightLevel('evening'),
-                child: Text('Evening'),
+                onPressed: () => _updateSelectedLightLevel('Soir'),
+                child: Text('Soir'),
               ),
               ElevatedButton(
-                onPressed: () => _updateSelectedLightLevel('night'),
-                child: Text('Night'),
+                onPressed: () => _updateSelectedLightLevel('Nuit'),
+                child: Text('Nuit'),
               ),
             ],
           ),
@@ -487,30 +500,33 @@ class _UserPageState extends State<UserPage> {
   void _updateSelectedLightLevel(String level) {
     setState(() {
       selectedLightLevel = level;
+      lightThreshold = lightLevels[level] ?? 0.0;
 
       houses.doc(_houseId).update({
         'selected_light_level': level,
+        'light_threshold': lightThreshold,
       }).then((_) {
-        Navigator.pop(context); // Close the dialog
+        Navigator.pop(context); // Ferme le dialogue
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Light level updated successfully'),
+            content: Text('Niveau de luminosité mis à jour avec succès'),
             duration: Duration(seconds: 2),
           ),
         );
       }).catchError((error) {
         if (kDebugMode) {
-          print('Error updating document: $error');
+          print('Erreur de mise à jour du document: $error');
         }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Error updating document'),
+            content: Text('Erreur de mise à jour du document'),
             duration: Duration(seconds: 2),
           ),
         );
       });
     });
   }
+
 
   Widget buildElevatedButton(VoidCallback onPressed, IconData icon) {
     return ElevatedButton(
