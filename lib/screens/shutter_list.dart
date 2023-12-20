@@ -1,5 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+
+
 
 class Shutter {
   final String id;
@@ -29,6 +33,8 @@ class ShutterList extends StatefulWidget {
 class _ShutterListState extends State<ShutterList> {
 
   // MISE EN PLACE DE LA LISTE DES VOLETS et Pieces
+  String? _houseId;
+  String? _userId;
   List<Shutter> shutters = [];
   List<Room> rooms = [];
   List<Shutter> shutterInRooms = [];
@@ -36,72 +42,194 @@ class _ShutterListState extends State<ShutterList> {
   CollectionReference shutterCollection = FirebaseFirestore.instance.collection('shutters');
   CollectionReference roomCollection = FirebaseFirestore.instance.collection('rooms');
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchShuttersAndRoomsFromFirestore();
-    
-    
+@override
+void initState() {
+  super.initState();
+  final user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    _userId = user.uid;
   }
-
-  Future<void> _fetchShuttersAndRoomsFromFirestore() async {
-    QuerySnapshot<Object?> snapshot = await shutterCollection.get();
-
-    List<Shutter> fetchedShutters = snapshot.docs.map((doc) {
-      Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-
-      if (data != null) {
-        // Création d'un objet Shutter en utilisant les champs du document Firestore
-        return Shutter(
-          id: doc.id,
-          name: data['shutter_name'] as String,
-          room: data['room_id'] as String,
-          isOn: data['shutter_open'] as bool? ?? false,
-        );
-      } else {
-        // Gérer le cas où les données sont nulles ou absentes
-        return Shutter(id : 'id inconnu',name: 'Nom inconnu', room: 'inconnu');
-      }
-    }).toList();
-
-    setState(() {
-      shutters = fetchedShutters;
-    });
-    _fetchRoomsFromFirestore();
-  }
-
-  Future<void> _fetchRoomsFromFirestore() async {
-    
-    QuerySnapshot<Object?> snapshot = await roomCollection.get();
-
-    List<Room> fetchedRooms = snapshot.docs.map((doc) {
-      Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-
-      if (data != null) {
-        String roomName = data['room_name'] as String;
+  _fetchRoomsFromFirestore();
+  _fetchHouseId();
+}
   
-        print("ok  $roomName");
-        List<Shutter> roomShutters = shutters
-            .where((shutter) => roomName == shutter.room)
-            .toList();
-        print(roomShutters);
-        return Room(
-          id: doc.id,
-          name: data['room_name'] as String,
-          isOn: data['shutters_open'] as bool? ?? false,
-          shutters: roomShutters,
-        );
-      } else {
-        return Room(id : 'inconnu',name: 'Nom inconnu', shutters: []);
+
+Future<void> _fetchHouseId() async {
+  try {
+    if (_userId != null) {
+      
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .get();
+
+    
+      if (userDoc.exists) {
+        String? houseId = userDoc.get('houseId');
+
+        setState(() {
+          _houseId = houseId; 
+        });
       }
-    }).toList();
-
-    setState(() {
-      rooms = fetchedRooms;
-    });
+    }
+  } catch (e) {
+    print('Erreur lors de la récupération de l\'identifiant de la maison : $e');
   }
+}
 
+Future<void> _fetchRoomsFromFirestore() async {
+  try {
+    if (_userId != null) {
+      
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .get();
 
+      
+      if (userDoc.exists) {
+        String? houseId = userDoc.get('houseId');
+
+        if (houseId != null) {
+         
+          QuerySnapshot<Object?> roomSnapshot = await FirebaseFirestore.instance
+              .collection('rooms')
+              .where('houseId', isEqualTo: houseId)
+              .get();
+
+          List<Room> fetchedRooms = roomSnapshot.docs.map((doc) {
+            
+            Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+
+            if (data != null) {
+              return Room(
+                id: doc.id,
+                name: data['room_name'] as String,
+                isOn: data['shutters_open'] as bool? ?? false,
+                shutters: [], 
+              );
+            } else {
+              return Room(id: 'inconnu', name: 'Nom inconnu', shutters: []);
+            }
+          }).toList();
+
+          setState(() {
+            rooms = fetchedRooms;
+          });
+
+          
+          _fetchShuttersFromFirestore();
+          _fetchShuttersForRooms();
+        } else {
+          print('ID de la maison non trouvé pour cet utilisateur.');
+        }
+      } else {
+        print('Le document de l\'utilisateur n\'existe pas.');
+      }
+    }
+  } catch (e) {
+    print('Erreur lors de la récupération des pièces : $e');
+  }
+}
+
+Future<void> _fetchShuttersForRooms() async {
+  try {
+    for (Room room in rooms) {
+      QuerySnapshot<Object?> shutterSnapshot = await FirebaseFirestore.instance
+          .collection('shutters')
+          .where('room_id', isEqualTo: room.id)
+          .get();
+          
+
+      List<Shutter> roomShutters = shutterSnapshot.docs.map((doc) {
+        Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+
+        if (data != null) {
+          return Shutter(
+            id: doc.id,
+            name: data['shutter_name'] as String,
+            room: data['room_id'] as String,
+            isOn: data['shutter_open'] as bool? ?? false,
+          );
+        } else {
+          return Shutter(id: 'id inconnu', name: 'Nom inconnu', room: 'inconnu');
+        }
+      }).toList();
+
+      setState(() {
+        room.shutters = roomShutters; 
+      });
+    }
+  } catch (e) {
+    print('Erreur lors de la récupération des volets pour les pièces : $e');
+  }
+}
+
+Future<void> _fetchShuttersFromFirestore() async {
+  try {
+    if (_userId != null) {
+      
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .get();
+
+      
+      if (userDoc.exists) {
+        String? houseId = userDoc.get('houseId');
+
+        if (houseId != null) {
+          
+          QuerySnapshot<Object?> roomSnapshot = await FirebaseFirestore.instance
+              .collection('shutters')
+              .where('houseId', isEqualTo: houseId)
+              .get();
+
+          List<Shutter> fetchedShutters = roomSnapshot.docs.map((doc) {
+            
+            Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+
+            if (data != null) {
+              return Shutter(
+                id: doc.id,
+                name: data['shutter_name'] as String,
+                room: data['room_id'] as String,
+                isOn: data['shutter_open'] as bool? ?? false,
+              );
+            } else {
+              return Shutter(
+                id: 'id inconnu',
+                name: 'Nom inconnu',
+                room: 'inconnu',
+                isOn: false,
+              );
+            }
+          }).toList();
+
+          
+          setState(() {
+            shutters = fetchedShutters;
+            for(Shutter shutter in shutters){
+              for(Room room in rooms){
+                if(shutter.room==room.id){
+                  shutter.room=room.name;
+                }
+              }
+            }
+          });
+        } else {
+          print('ID de la maison non trouvé pour cet utilisateur.');
+        }
+      } else {
+        print('Le document de l\'utilisateur n\'existe pas.');
+      }
+    } else {
+      print('L\'ID de l\'utilisateur est nul.');
+    }
+  } catch (e) {
+    print('Erreur lors de la récupération des volets : $e');
+  }
+}
 
   bool showShutters = true; // Toggle pour l'affichage de la liste des volets
   bool showRooms = false; // toggle pour l'affichage de la liste des pieces
@@ -139,12 +267,13 @@ class _ShutterListState extends State<ShutterList> {
         ],
       ),
       body: showShutters ? _buildShutters() : _buildRooms(),
-      floatingActionButton: showShutters ? _addShutterButton() : _addRoomButton(), // bouton qui en focntion de  liste affichée montre le bon
+      floatingActionButton: showShutters ? null : _addRoomButton(), // bouton qui en focntion de  liste affichée montre le bon
     );
   }
 
   //bouton add volet OKK
   Widget _addShutterButton() {
+     
     return FloatingActionButton(
       onPressed: () {
         _showAddShutterDialog(context);
@@ -262,7 +391,7 @@ void _updateShutterRoomInDatabase(Shutter shutter) {
   }
 
 
-  //TEST
+  
   // deplacer volet dans une piece
   void _moveShutter(Shutter shutter) {
     Room? selectedRoom;
@@ -324,7 +453,7 @@ void _updateShutterRoomInDatabase(Shutter shutter) {
       currentRoom.shutters.remove(shutter);
       room.shutters.add(shutter);
       shutter.isOn = room.isOn;
-      shutter.room = room.name;
+      shutter.room = room.id;
       _updateShutterInRooms(shutter);
     });
   }
@@ -385,7 +514,8 @@ void _updateShutterRoomInDatabase(Shutter shutter) {
   }
 
 void _updateShutterDeleteRoomInDatabase(Shutter shutter) {
- 
+
+  shutter.room="indépendant"; 
   DocumentReference documentReference = FirebaseFirestore.instance.collection('shutters').doc(shutter.id);
 
  
@@ -502,10 +632,12 @@ void _updateRoomOpenInDatabase(Room room) {
     rooms.add(newRoom);
   });
 
+  
   // Ajouter la nouvelle pièce à Firestore
   roomCollection.add({
     'room_name': newRoom.name,
     'shutters_open': newRoom.isOn,
+    'houseId':_houseId,
   }).then((value) {
     print('Room added to Firestore successfully!');
     
